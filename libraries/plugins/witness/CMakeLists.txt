@@ -1,15 +1,23 @@
-file(GLOB HEADERS "include/steemit/witness/*.hpp")
+file(GLOB HEADERS "include/morphene/plugins/witness/*.hpp")
 
-add_library( steemit_witness
-             witness.cpp
+add_library( witness_plugin
+             witness_plugin.cpp
+             ${HEADERS}
            )
 
-target_link_libraries( steemit_witness steemit_chain steemit_app graphene_time )
-target_include_directories( steemit_witness
+target_link_libraries( witness_plugin p2p_plugin chain_plugin rc_plugin appbase morphene_chain morphene_utilities morphene_utilities )
+target_include_directories( witness_plugin
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
+if( CLANG_TIDY_EXE )
+   set_target_properties(
+      witness_plugin PROPERTIES
+      CXX_CLANG_TIDY "${DO_CLANG_TIDY}"
+   )
+endif( CLANG_TIDY_EXE )
+
 install( TARGETS
-   steemit_witness
+   witness_plugin
 
    RUNTIME DESTINATION bin
    LIBRARY DESTINATION lib

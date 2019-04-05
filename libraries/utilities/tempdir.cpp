@@ -22,18 +22,18 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/utilities/tempdir.hpp>
+#include <morphene/utilities/tempdir.hpp>
 
 #include <cstdlib>
 
-namespace graphene { namespace utilities {
+namespace morphene { namespace utilities {
 
 fc::path temp_directory_path()
 {
-   const char* graphene_tempdir = getenv("GRAPHENE_TEMPDIR");
-   if( graphene_tempdir != nullptr )
-      return fc::path( graphene_tempdir );
-   return fc::temp_directory_path() / "graphene-tmp";
+   const char* morphene_tempdir = getenv("MORPHENE_TEMPDIR");
+   if( morphene_tempdir != nullptr )
+      return fc::path( morphene_tempdir );
+   return fc::temp_directory_path() / "morphene-tmp";
 }
 
-} } // graphene::utilities
+} } // morphene::utilities

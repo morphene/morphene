@@ -1,0 +1,76 @@
+[
+ ["resource_history_bytes",
+  {
+   "time_unit" : "blocks",
+   "budget_time" : {"days" : 30},
+   "budget" : "37500000000",
+   "half_life" : {"days" : 15},
+   "resource_unit_base" : 10,
+   "resource_unit_exponent" : 0,
+   "a_point_num" : 50,
+   "a_point_denom" : 10000,
+   "u_point_num" : 1,
+   "u_point_denom" : 2
+  }
+ ],
+
+ ["resource_new_accounts",
+  {
+   "time_unit" : "blocks",
+   "budget_time" : {"seconds" : 30000},
+   "budget" : 797,
+   "half_life" : {"days" : 5},
+   "resource_unit_base" : 10,
+   "resource_unit_exponent" : 4,
+   "a_point_num" : 37,
+   "a_point_denom" : 1000,
+   "u_point_num" : 1,
+   "u_point_denom" : 2
+  }
+ ],
+
+ ["resource_market_bytes",
+  {
+   "time_unit" : "blocks",
+   "budget_time" : {"days" : 30},
+   "budget" : "6250000000",
+   "half_life" : {"hours" : 16},
+   "resource_unit_base" : 10,
+   "resource_unit_exponent" : 1,
+   "a_point_num" : 50,
+   "a_point_denom" : 10000,
+   "u_point_num" : 1,
+   "u_point_denom" : 2
+  }
+ ],
+
+ ["resource_state_bytes",
+  {
+   "time_unit" : "blocks",
+   "budget_time" : {"days" : 30},
+   "budget" : "30000000000000",
+   "half_life" : {"days" : 15},
+   "resource_unit_base" : 10,
+   "resource_unit_exponent" : 0,
+   "a_point_num" : 50,
+   "a_point_denom" : 10000,
+   "u_point_num" : 1,
+   "u_point_denom" : 2
+  }
+ ],
+
+ ["resource_execution_time",
+  {
+   "time_unit" : "blocks",
+   "budget_time" : {"days" : 30},
+   "budget" : "8876712328766",
+   "half_life" : {"days" : 15},
+   "resource_unit_base" : 10,
+   "resource_unit_exponent" : 0,
+   "a_point_num" : 50,
+   "a_point_denom" : 10000,
+   "u_point_num" : 1,
+   "u_point_denom" : 2
+  }
+ ]
+]

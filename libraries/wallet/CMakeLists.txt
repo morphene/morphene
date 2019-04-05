@@ -1,4 +1,4 @@
-file(GLOB HEADERS "include/steemit/wallet/*.hpp")
+file(GLOB HEADERS "include/morphene/wallet/*.hpp")
 
 find_package( Perl )
 find_package( Doxygen )
@@ -8,9 +8,10 @@ if( PERL_FOUND AND DOXYGEN_FOUND AND NOT "${CMAKE_GENERATOR}" STREQUAL "Ninja" )
   add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen/perlmod/DoxyDocs.pm
                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                       COMMAND ${DOXYGEN_EXECUTABLE}
-                      DEPENDS Doxyfile include/steemit/wallet/wallet.hpp )
+                      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile ${CMAKE_CURRENT_SOURCE_DIR}/include/morphene/wallet/wallet.hpp )
+
   add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp
-                      COMMAND ${PERL_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_api_documentation.pl ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp.new
+                      COMMAND PERLLIB=${CMAKE_CURRENT_SOURCE_DIR} ${PERL_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_api_documentation.pl ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp.new
 
                       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp.new ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp
                       COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp.new
@@ -22,18 +23,26 @@ else()
                       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/api_documentation_standin.cpp )
 endif()
 
-add_library( steemit_wallet wallet.cpp ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp ${HEADERS} )
-target_link_libraries( steemit_wallet PRIVATE steemit_app graphene_net steemit_chain graphene_utilities fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
-target_include_directories( graphene_db PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+add_library( morphene_wallet wallet.cpp remote_node_api.cpp ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp ${HEADERS} )
+target_link_libraries( morphene_wallet PRIVATE graphene_net morphene_protocol morphene_utilities fc database_api_plugin account_history_api_plugin ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+target_include_directories( morphene_wallet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+
+if( CLANG_TIDY_EXE )
+   set_target_properties(
+      morphene_wallet PROPERTIES
+      CXX_CLANG_TIDY "${DO_CLANG_TIDY}"
+   )
+endif( CLANG_TIDY_EXE )
 
 if(MSVC)
   set_source_files_properties( wallet.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
 install( TARGETS
-   steemit_wallet
+   morphene_wallet
 
    RUNTIME DESTINATION bin
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
 )
+install( FILES ${HEADERS} DESTINATION "include/morphene/wallet" )

@@ -1,7 +1,9 @@
-#include <steemit/chain/fork_database.hpp>
-#include <steemit/chain/exceptions.hpp>
+#include <morphene/chain/fork_database.hpp>
 
-namespace steemit { namespace chain {
+#include <morphene/chain/database_exceptions.hpp>
+
+namespace morphene { namespace chain {
+
 fork_database::fork_database()
 {
 }
@@ -59,25 +61,13 @@ void  fork_database::_push_block(const item_ptr& item)
    {
       auto& index = _index.get<block_id>();
       auto itr = index.find(item->previous_id());
-      STEEMIT_ASSERT(itr != index.end(), unlinkable_block_exception, "block does not link to known chain");
+      MORPHENE_ASSERT(itr != index.end(), unlinkable_block_exception, "block does not link to known chain");
       FC_ASSERT(!(*itr)->invalid);
       item->prev = *itr;
    }
 
    _index.insert(item);
-   if( !_head ) _head = item;
-   else if( item->num > _head->num )
-   {
-      _head = item;
-      uint32_t min_num = _head->num - std::min( _max_size, _head->num );
-//      ilog( "min block in fork DB ${n}, max_size: ${m}", ("n",min_num)("m",_max_size) );
-      auto& num_idx = _index.get<block_num>();
-      while( num_idx.size() && (*num_idx.begin())->num < min_num )
-         num_idx.erase( num_idx.begin() );
-
-      _unlinked_index.get<block_num>().erase(_head->num - _max_size);
-   }
-   //_push_next( item );
+   if( !_head || item->num > _head->num ) _head = item;
 }
 
 /**
@@ -158,9 +148,12 @@ item_ptr fork_database::fetch_block(const block_id_type& id)const
 
 vector<item_ptr> fork_database::fetch_block_by_number(uint32_t num)const
 {
+   try
+   {
    vector<item_ptr> result;
-   auto itr = _index.get<block_num>().find(num);
-   while( itr != _index.get<block_num>().end() )
+   auto const& block_num_idx = _index.get<block_num>();
+   auto itr = block_num_idx.lower_bound(num);
+   while( itr != block_num_idx.end() && itr->get()->num == num )
    {
       if( (*itr)->num == num )
          result.push_back( *itr );
@@ -169,6 +162,8 @@ vector<item_ptr> fork_database::fetch_block_by_number(uint32_t num)const
       ++itr;
    }
    return result;
+   }
+   FC_LOG_AND_RETHROW()
 }
 
 pair<fork_database::branch_type,fork_database::branch_type>
@@ -215,6 +210,27 @@ pair<fork_database::branch_type,fork_database::branch_type>
    return result;
 } FC_CAPTURE_AND_RETHROW( (first)(second) ) }
 
+shared_ptr<fork_item> fork_database::walk_main_branch_to_num( uint32_t block_num )const
+{
+   shared_ptr<fork_item> next = head();
+   if( block_num > next->num )
+      return shared_ptr<fork_item>();
+
+   while( next.get() != nullptr && next->num > block_num )
+      next = next->prev.lock();
+   return next;
+}
+
+shared_ptr<fork_item> fork_database::fetch_block_on_main_branch_by_number( uint32_t block_num )const
+{
+   vector<item_ptr> blocks = fetch_block_by_number(block_num);
+   if( blocks.size() == 1 )
+      return blocks[0];
+   if( blocks.size() == 0 )
+      return shared_ptr<fork_item>();
+   return walk_main_branch_to_num(block_num);
+}
+
 void fork_database::set_head(shared_ptr<fork_item> h)
 {
    _head = h;
@@ -225,4 +241,4 @@ void fork_database::remove(block_id_type id)
    _index.get<block_id>().erase(id);
 }
 
-} } // steemit::chain
+} } // morphene::chain

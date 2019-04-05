@@ -24,9 +24,11 @@
 #include <graphene/net/peer_connection.hpp>
 #include <graphene/net/exceptions.hpp>
 #include <graphene/net/config.hpp>
-#include <steemit/chain/config.hpp>
+#include <morphene/protocol/config.hpp>
 
 #include <fc/thread/thread.hpp>
+
+#include <boost/scope_exit.hpp>
 
 #ifdef DEFAULT_LOGGER
 # undef DEFAULT_LOGGER
@@ -47,7 +49,7 @@ namespace graphene { namespace net
       {
         // patch the current time into the message.  Since this operates on the packed version of the structure,
         // it won't work for anything after a variable-length field
-        std::vector<char> packed_current_time = fc::raw::pack(fc::time_point::now());
+        std::vector<char> packed_current_time = fc::raw::pack_to_vector(fc::time_point::now());
         assert(message_send_time_field_offset + packed_current_time.size() <= message_to_send.data.size());
         memcpy(message_to_send.data.data() + message_send_time_field_offset,
                packed_current_time.data(), packed_current_time.size());
@@ -85,11 +87,12 @@ namespace graphene { namespace net
       inhibit_fetching_sync_blocks(false),
       transaction_fetching_inhibited_until(fc::time_point::min()),
       last_known_fork_block_number(0),
-      firewall_check_state(nullptr)
+      firewall_check_state(nullptr),
 #ifndef NDEBUG
-      ,_thread(&fc::thread::current()),
-      _send_message_queue_tasks_running(0)
+      _thread(&fc::thread::current()),
+      _send_message_queue_tasks_running(0),
 #endif
+      _currently_handling_message(false)
     {
     }
 
@@ -107,7 +110,7 @@ namespace graphene { namespace net
       //, [](peer_connection* peer_to_delete){ fc::async([peer_to_delete](){delete peer_to_delete;}); });
     }
 
-    void peer_connection::destroy()
+    void peer_connection::destroy(const char* caller)
     {
       VERIFY_CORRECT_THREAD();
 
@@ -166,13 +169,13 @@ namespace graphene { namespace net
         wlog("Unexpected exception from peer_connection's accept_or_connect_task");
       }
 
-      _message_connection.destroy_connection(); // shut down the read loop
+      _message_connection.destroy_connection(caller); // shut down the read loop
     }
 
     peer_connection::~peer_connection()
     {
       VERIFY_CORRECT_THREAD();
-      destroy();
+      destroy(__FUNCTION__);
     }
 
     fc::tcp_socket& peer_connection::get_socket()
@@ -264,6 +267,10 @@ namespace graphene { namespace net
     void peer_connection::on_message( message_oriented_connection* originating_connection, const message& received_message )
     {
       VERIFY_CORRECT_THREAD();
+      _currently_handling_message = true;
+      BOOST_SCOPE_EXIT(this_) {
+        this_->_currently_handling_message = false;
+      } BOOST_SCOPE_EXIT_END
       _node->on_message( this, received_message );
     }
 
@@ -389,11 +396,11 @@ namespace graphene { namespace net
       _message_connection.close_connection();
     }
 
-    void peer_connection::destroy_connection()
+    void peer_connection::destroy_connection(const char* caller)
     {
       VERIFY_CORRECT_THREAD();
       negotiation_status = connection_negotiation_status::closing;
-      destroy();
+      destroy(caller);
     }
 
     uint64_t peer_connection::get_total_bytes_sent() const
@@ -437,16 +444,22 @@ namespace graphene { namespace net
       _remote_endpoint = new_remote_endpoint;
     }
 
-    bool peer_connection::busy()
+    bool peer_connection::busy() const
     {
       VERIFY_CORRECT_THREAD();
       return !items_requested_from_peer.empty() || !sync_items_requested_from_peer.empty() || item_ids_requested_from_peer;
     }
 
-    bool peer_connection::idle()
+    bool peer_connection::idle() const
     {
       VERIFY_CORRECT_THREAD();
       return !busy();
+    }
+
+    bool peer_connection::is_currently_handling_message() const
+    {
+      VERIFY_CORRECT_THREAD();
+      return _currently_handling_message;
     }
 
     bool peer_connection::is_transaction_fetching_inhibited() const
@@ -498,7 +511,7 @@ namespace graphene { namespace net
       // to give us some wiggle room)
       return inventory_peer_advertised_to_us.size() >
         GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES * GRAPHENE_NET_MAX_TRX_PER_SECOND * 60 +
-        (GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES + 1) * 60 / STEEMIT_BLOCK_INTERVAL;
+        (GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES + 1) * 60 / MORPHENE_BLOCK_INTERVAL;
     }
 
     bool peer_connection::performing_firewall_check() const

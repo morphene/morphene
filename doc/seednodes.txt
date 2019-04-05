@@ -1,0 +1,1 @@
+seed.domain.com:2001          # example

@@ -1,15 +1,22 @@
-file(GLOB HEADERS "include/steemit/account_history/*.hpp")
+file(GLOB HEADERS "include/morphene/plugins/account_history/*.hpp")
 
-add_library( steemit_account_history
+add_library( account_history_plugin
              account_history_plugin.cpp
            )
 
-target_link_libraries( steemit_account_history steemit_chain steemit_app graphene_time )
-target_include_directories( steemit_account_history
+target_link_libraries( account_history_plugin chain_plugin morphene_chain morphene_protocol morphene_utilities )
+target_include_directories( account_history_plugin
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
+if( CLANG_TIDY_EXE )
+   set_target_properties(
+      account_history_plugin PROPERTIES
+      CXX_CLANG_TIDY "${DO_CLANG_TIDY}"
+   )
+endif( CLANG_TIDY_EXE )
+
 install( TARGETS
-   steemit_account_history
+   account_history_plugin
 
    RUNTIME DESTINATION bin
    LIBRARY DESTINATION lib

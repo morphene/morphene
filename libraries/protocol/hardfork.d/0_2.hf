@@ -1,0 +1,6 @@
+#ifndef MORPHENE_HARDFORK_0_2
+#define MORPHENE_HARDFORK_0_2 2
+// Wed, 1 Jan 2020 00:00:00 GMT
+#define MORPHENE_HARDFORK_0_2_TIME 1577836800
+#define MORPHENE_HARDFORK_0_2_VERSION hardfork_version( 0, 2 )
+#endif

@@ -32,6 +32,8 @@
 #include <graphene/net/stcp_socket.hpp>
 #include <graphene/net/config.hpp>
 
+#include <atomic>
+
 #ifdef DEFAULT_LOGGER
 # undef DEFAULT_LOGGER
 #endif
@@ -61,7 +63,6 @@ namespace graphene { namespace net {
       fc::time_point _last_message_sent_time;
 
       bool _send_message_in_progress;
-
 #ifndef NDEBUG
       fc::thread* _thread;
 #endif
@@ -80,7 +81,7 @@ namespace graphene { namespace net {
 
       void send_message(const message& message_to_send);
       void close_connection();
-      void destroy_connection();
+      void destroy_connection(const char* caller);
 
       uint64_t get_total_bytes_sent() const;
       uint64_t get_total_bytes_received() const;
@@ -106,7 +107,7 @@ namespace graphene { namespace net {
     message_oriented_connection_impl::~message_oriented_connection_impl()
     {
       VERIFY_CORRECT_THREAD();
-      destroy_connection();
+      destroy_connection(__FUNCTION__);
     }
 
     fc::tcp_socket& message_oriented_connection_impl::get_socket()
@@ -127,7 +128,7 @@ namespace graphene { namespace net {
     {
       VERIFY_CORRECT_THREAD();
       _sock.connect_to(remote_endpoint);
-      assert(!_read_loop_done.valid()); // check to be sure we never launch two read loops
+      FC_ASSERT(!_read_loop_done.valid()); // check to be sure we never launch two read loops
       _read_loop_done = fc::async([=](){ read_loop(); }, "message read_loop");
     }
 
@@ -136,7 +137,6 @@ namespace graphene { namespace net {
       VERIFY_CORRECT_THREAD();
       _sock.bind(local_endpoint);
     }
-
 
     void message_oriented_connection_impl::read_loop()
     {
@@ -261,8 +261,13 @@ namespace graphene { namespace net {
         //pad the message we send to a multiple of 16 bytes
         size_t size_with_padding = 16 * ((size_of_message_and_header + 15) / 16);
         std::unique_ptr<char[]> padded_message(new char[size_with_padding]);
+
         memcpy(padded_message.get(), (char*)&message_to_send, sizeof(message_header));
         memcpy(padded_message.get() + sizeof(message_header), message_to_send.data.data(), message_to_send.size );
+        char* paddingSpace = padded_message.get() + sizeof(message_header) + message_to_send.size;
+        size_t toClean = size_with_padding - size_of_message_and_header;
+        memset(paddingSpace, 0, toClean);
+
         _sock.write(padded_message.get(), size_with_padding);
         _sock.flush();
         _bytes_sent += size_with_padding;
@@ -276,14 +281,14 @@ namespace graphene { namespace net {
       _sock.close();
     }
 
-    void message_oriented_connection_impl::destroy_connection()
+    void message_oriented_connection_impl::destroy_connection(const char* caller)
     {
       VERIFY_CORRECT_THREAD();
 
       fc::optional<fc::ip::endpoint> remote_endpoint;
       if (_sock.get_socket().is_open())
         remote_endpoint = _sock.get_socket().remote_endpoint();
-      ilog( "in destroy_connection() for ${endpoint}", ("endpoint", remote_endpoint) );
+      ilog( "in destroy_connection(${caller}) for `${endpoint}'", ("caller", caller)("endpoint", remote_endpoint) );
 
       if (_send_message_in_progress)
         elog("Error: message_oriented_connection is being destroyed while a send_message is in progress.  "
@@ -376,9 +381,9 @@ namespace graphene { namespace net {
     my->close_connection();
   }
 
-  void message_oriented_connection::destroy_connection()
+  void message_oriented_connection::destroy_connection(const char* caller)
   {
-    my->destroy_connection();
+    my->destroy_connection(caller);
   }
 
   uint64_t message_oriented_connection::get_total_bytes_sent() const

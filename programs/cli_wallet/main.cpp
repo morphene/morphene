@@ -36,11 +36,11 @@
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/smart_ref_impl.hpp>
 
-#include <graphene/utilities/key_conversion.hpp>
+#include <morphene/utilities/key_conversion.hpp>
 
-#include <steemit/app/api.hpp>
-#include <steemit/chain/protocol/protocol.hpp>
-#include <steemit/wallet/wallet.hpp>
+#include <morphene/protocol/protocol.hpp>
+#include <morphene/wallet/remote_node_api.hpp>
+#include <morphene/wallet/wallet.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
@@ -58,10 +58,9 @@
 #endif
 
 
-using namespace graphene::utilities;
-using namespace steemit::app;
-using namespace steemit::chain;
-using namespace steemit::wallet;
+using namespace morphene::utilities;
+using namespace morphene::chain;
+using namespace morphene::wallet;
 using namespace std;
 namespace bpo = boost::program_options;
 
@@ -73,16 +72,16 @@ int main( int argc, char** argv )
          opts.add_options()
          ("help,h", "Print this help message and exit.")
          ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
-         ("server-rpc-user,u", bpo::value<string>(), "Server Username")
-         ("server-rpc-password,p", bpo::value<string>(), "Server Password")
+         ("cert-authority,a", bpo::value<string>()->default_value("_default"), "Trusted CA bundle file for connecting to wss:// TLS server")
          ("rpc-endpoint,r", bpo::value<string>()->implicit_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
          ("rpc-tls-endpoint,t", bpo::value<string>()->implicit_value("127.0.0.1:8092"), "Endpoint for wallet websocket TLS RPC to listen on")
          ("rpc-tls-certificate,c", bpo::value<string>()->implicit_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
          ("rpc-http-endpoint,H", bpo::value<string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
-         ("rpc-http-gui-endpoint,G", bpo::value<string>()->implicit_value("127.0.0.1:8094"), "Endpoint for wallet HTTP GUI to listen on")
          ("daemon,d", "Run the wallet in daemon mode" )
+         ("rpc-http-allowip", bpo::value<vector<string>>()->multitoken(), "Allows only specified IPs to connect to the HTTP endpoint" )
          ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
-         ("chain-id", bpo::value<string>(), "chain ID to connect to");
+         ("chain-id", bpo::value< std::string >()->default_value( MORPHENE_CHAIN_ID ), "chain ID to connect to");
+      vector<string> allowed_ips;
 
       bpo::variables_map options;
 
@@ -92,6 +91,26 @@ int main( int argc, char** argv )
       {
          std::cout << opts << "\n";
          return 0;
+      }
+      if( options.count("rpc-http-allowip") && options.count("rpc-http-endpoint") ) {
+         allowed_ips = options["rpc-http-allowip"].as<vector<string>>();
+         wdump((allowed_ips));
+      }
+
+      morphene::protocol::chain_id_type _morphene_chain_id;
+
+      if( options.count("chain-id") )
+      {
+         auto chain_id_str = options.at("chain-id").as< std::string >();
+
+         try
+         {
+            _morphene_chain_id = chain_id_type( chain_id_str);
+         }
+         catch( fc::exception& )
+         {
+            FC_ASSERT( false, "Could not parse chain_id as hex string. Chain ID String: ${s}", ("s", chain_id_str) );
+         }
       }
 
       fc::path data_dir;
@@ -138,22 +157,16 @@ int main( int argc, char** argv )
       // but allow CLI to override
       if( options.count("server-rpc-endpoint") )
          wdata.ws_server = options.at("server-rpc-endpoint").as<std::string>();
-      if( options.count("server-rpc-user") )
-         wdata.ws_user = options.at("server-rpc-user").as<std::string>();
-      if( options.count("server-rpc-password") )
-         wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
-      fc::http::websocket_client client;
+      fc::http::websocket_client client( options["cert-authority"].as<std::string>() );
       idump((wdata.ws_server));
       auto con  = client.connect( wdata.ws_server );
       auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
-      auto remote_api = apic->get_remote_api< login_api >(1);
-      edump((wdata.ws_user)(wdata.ws_password) );
-      // TODO:  Error message here
-      FC_ASSERT( remote_api->login( wdata.ws_user, wdata.ws_password ) );
+      auto remote_api = apic->get_remote_api< morphene::wallet::remote_node_api >( 0, "database_api" );
+      auto account_history_api = apic->get_remote_api< morphene::wallet::remote_node_api >( 1, "account_history_api" );
 
-      auto wapiptr = std::make_shared<wallet_api>( wdata, remote_api );
+      auto wapiptr = std::make_shared<wallet_api>( wdata, _morphene_chain_id, remote_api, account_history_api );
       wapiptr->set_wallet_filename( wallet_file.generic_string() );
       wapiptr->load_wallet_file();
 
@@ -212,10 +225,15 @@ int main( int argc, char** argv )
          _websocket_tls_server->start_accept();
       }
 
+      set<fc::ip::address> allowed_ip_set;
+
       auto _http_server = std::make_shared<fc::http::server>();
       if( options.count("rpc-http-endpoint" ) )
       {
          ilog( "Listening for incoming HTTP RPC requests on ${p}", ("p", options.at("rpc-http-endpoint").as<string>() ) );
+         for( const auto& ip : allowed_ips )
+            allowed_ip_set.insert(fc::ip::address(ip));
+
          _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-endpoint" ).as<string>() ) );
          //
          // due to implementation, on_request() must come AFTER listen()
@@ -223,33 +241,16 @@ int main( int argc, char** argv )
          _http_server->on_request(
             [&]( const fc::http::request& req, const fc::http::server::response& resp )
             {
+               auto itr = allowed_ip_set.find( fc::ip::endpoint::from_string(req.remote_endpoint).get_address() );
+               if( itr == allowed_ip_set.end() ) {
+                  elog("rejected connection from ${ip} because it isn't in allowed set ${s}", ("ip",req.remote_endpoint)("s",allowed_ip_set) );
+                  resp.set_status( fc::http::reply::NotAuthorized );
+                  return;
+               }
                std::shared_ptr< fc::rpc::http_api_connection > conn =
                   std::make_shared< fc::rpc::http_api_connection>();
                conn->register_api( wapi );
                conn->on_request( req, resp );
-            } );
-      }
-
-      if( options.count("rpc-http-gui-endpoint" ) )
-      {
-         ilog( "Listening for incoming HTTP GUI RPC requests on ${p}", ("p", options.at("rpc-http-gui-endpoint").as<string>() ) );
-         _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-gui-endpoint" ).as<string>() ) );
-         //
-         // due to implementation, on_request() must come AFTER listen()
-         //
-         _http_server->on_request(
-            [&]( const fc::http::request& req, const fc::http::server::response& resp )
-            {
-               std::string response = "hello";
-               std::vector<std::string> words;
-               boost::split(words, req.path, boost::is_any_of("/"));
-               for( auto w : words ) { response += ":" + w; }
-
-               response = fc::json::to_pretty_string( wapiptr->get_state( req.path ) );
-
-               resp.set_status( fc::http::reply::OK );
-               resp.set_length( response.size() );
-               resp.write( response.c_str(), response.size() );
             } );
       }
 

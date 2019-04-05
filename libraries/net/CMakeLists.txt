@@ -9,11 +9,10 @@ set(SOURCES node.cpp
 
 add_library( graphene_net ${SOURCES} ${HEADERS} )
 
-target_link_libraries( graphene_net 
-  PUBLIC fc graphene_db )
-target_include_directories( graphene_net 
-  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
-  PRIVATE "${CMAKE_SOURCE_DIR}/libraries/chain/include"
+target_link_libraries( graphene_net
+  PUBLIC morphene_protocol statsd_plugin fc )
+target_include_directories( graphene_net
+  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 
 if(MSVC)
@@ -25,6 +24,13 @@ if (USE_PCH)
   cotire(graphene_net)
 endif(USE_PCH)
 
+if( CLANG_TIDY_EXE )
+   set_target_properties(
+      graphene_net PROPERTIES
+      CXX_CLANG_TIDY "${DO_CLANG_TIDY}"
+   )
+endif( CLANG_TIDY_EXE )
+
 install( TARGETS
    graphene_net
 
@@ -32,3 +38,4 @@ install( TARGETS
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
 )
+install( FILES ${HEADERS} DESTINATION "include/graphene/net" )
