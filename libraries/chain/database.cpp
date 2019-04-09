@@ -1104,6 +1104,27 @@ legacy_asset database::create_vesting( const account_object& to_account, legacy_
    return create_vesting2( *this, to_account, liquid, []( legacy_asset vests_created ) {} );
 }
 
+fc::sha256 database::get_pow_target()const
+{
+   const auto& dgp = get_dynamic_global_properties();
+   fc::sha256 target;
+   target._hash[0] = -1;
+   target._hash[1] = -1;
+   target._hash[2] = -1;
+   target._hash[3] = -1;
+   target = target >> ((dgp.num_pow_witnesses/4)+4);
+   return target;
+}
+
+uint32_t database::get_pow_summary_target()const
+{
+   const dynamic_global_property_object& dgp = get_dynamic_global_properties();
+   if( dgp.num_pow_witnesses >= 1004 )
+      return 0;
+
+   return (0xFE00 - 0x0040 * dgp.num_pow_witnesses ) << 0x10;
+}
+
 void database::adjust_proxied_witness_votes( const account_object& a,
                                    const std::array< share_type, MORPHENE_MAX_PROXY_RECURSION_DEPTH+1 >& delta,
                                    int depth )
@@ -1181,7 +1202,7 @@ void database::adjust_witness_vote( const witness_object& witness, share_type de
       w.votes += delta;
       FC_ASSERT( w.votes <= get_dynamic_global_properties().total_vesting_shares.amount, "", ("w.votes", w.votes)("props",get_dynamic_global_properties().total_vesting_shares) );
 
-      w.virtual_scheduled_time = w.virtual_last_update + (MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH2 - w.virtual_position)/(w.votes.value+1);
+      w.virtual_scheduled_time = w.virtual_last_update + (MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH - w.virtual_position)/(w.votes.value+1);
 
       /** witnesses with a low number of votes could overflow the time field and end up with a scheduled time in the past */
       if( w.virtual_scheduled_time < wso.current_virtual_time )
@@ -1498,6 +1519,22 @@ void database::process_subsidized_accounts()
    }
 }
 
+asset database::get_pow_reward()const
+{
+   const auto& props = get_dynamic_global_properties();
+
+#ifndef IS_TEST_NET
+   /// 0 block rewards until at least MORPHENE_MAX_WITNESSES have produced a POW
+   if( props.num_pow_witnesses < MORPHENE_MAX_WITNESSES && props.head_block_number < MORPHENE_START_VESTING_BLOCK )
+      return asset( 0, MORPH_SYMBOL );
+#endif
+
+   FC_ASSERT( MORPHENE_BLOCK_INTERVAL == 3, "this code assumes a 3-second time interval" );
+   FC_ASSERT( MORPHENE_MAX_WITNESSES == 21, "this code assumes 21 per round" );
+   legacy_asset percent( calc_percent_reward_per_round< MORPHENE_POW_APR_PERCENT >( props.current_supply.amount ), MORPH_SYMBOL);
+   return std::max( percent, MORPHENE_MIN_POW_REWARD );
+}
+
 void database::account_recovery_processing()
 {
    // Clear expired recovery requests
@@ -1592,6 +1629,7 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< custom_evaluator                         >();
    _my->_evaluator_registry.register_evaluator< custom_binary_evaluator                  >();
    _my->_evaluator_registry.register_evaluator< custom_json_evaluator                    >();
+   _my->_evaluator_registry.register_evaluator< pow_evaluator                            >();
    _my->_evaluator_registry.register_evaluator< claim_account_evaluator                  >();
    _my->_evaluator_registry.register_evaluator< create_claimed_account_evaluator         >();
    _my->_evaluator_registry.register_evaluator< request_account_recovery_evaluator       >();

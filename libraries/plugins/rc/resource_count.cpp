@@ -208,12 +208,7 @@ struct count_operation_visitor
    void operator()( const producer_reward_operation& ) const {}
    void operator()( const clear_null_account_balance_operation& ) const {}
 
-
-   // TODO:
-   // Should following ops be market ops?
-   // withdraw_vesting, set_withdraw_vesting_route,
-   // escrow_transfer, escrow_dispute, escrow_release, escrow_approve,
-   // delegate_vesting_sharess
+   void operator()( const pow_operation& ) const {}
 };
 
 void count_resources(

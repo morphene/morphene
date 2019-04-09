@@ -69,6 +69,7 @@ namespace morphene { namespace chain {
          enum witness_schedule_type
          {
             elected,
+            miner,
             timeshare,
             none
          };
@@ -89,6 +90,7 @@ namespace morphene { namespace chain {
          uint32_t          total_missed = 0;
          uint64_t          last_aslot = 0;
          uint64_t          last_confirmed_block_num = 0;
+         uint64_t          pow_worker = 0;
 
          /**
           *  This is the key used to sign blocks on behalf of this witness
@@ -133,6 +135,8 @@ namespace morphene { namespace chain {
          fc::uint128       virtual_position;
          fc::uint128       virtual_scheduled_time = fc::uint128::max_value();
          ///@}
+
+         digest_type       last_work;
 
          /**
           * This field represents the Morphene blockchain version the witness is running.
@@ -182,11 +186,13 @@ namespace morphene { namespace chain {
          uint8_t                                                           num_scheduled_witnesses = 1;
          uint8_t                                                           elected_weight = 1;
          uint8_t                                                           timeshare_weight = 5;
+         uint8_t                                                           miner_weight = 1;
          uint32_t                                                          witness_pay_normalization_factor = 25;
          chain_properties                                                  median_props;
          version                                                           majority_version;
 
          uint8_t max_voted_witnesses            = MORPHENE_MAX_VOTED_WITNESSES;
+         uint8_t max_miner_witnesses            = MORPHENE_MAX_MINER_WITNESSES;
          uint8_t max_runner_witnesses           = MORPHENE_MAX_RUNNER_WITNESSES;
          uint8_t hardfork_required_witnesses    = MORPHENE_HARDFORK_REQUIRED_WITNESSES;
 
@@ -199,6 +205,8 @@ namespace morphene { namespace chain {
 
 
    struct by_vote_name;
+   struct by_work;
+   struct by_pow;
    struct by_schedule_time;
    /**
     * @ingroup object_index
@@ -215,6 +223,8 @@ namespace morphene { namespace chain {
             >,
             composite_key_compare< std::greater< share_type >, std::less< account_name_type > >
          >,
+         ordered_non_unique< tag< by_work >, member< witness_object, digest_type, &witness_object::last_work > >,
+         ordered_non_unique< tag< by_pow >, member< witness_object, uint64_t, &witness_object::pow_worker > >,
          ordered_unique< tag< by_schedule_time >,
             composite_key< witness_object,
                member< witness_object, fc::uint128, &witness_object::virtual_scheduled_time >,
@@ -259,7 +269,7 @@ namespace morphene { namespace chain {
 
 } }
 
-FC_REFLECT_ENUM( morphene::chain::witness_object::witness_schedule_type, (elected)(timeshare)(none) )
+FC_REFLECT_ENUM( morphene::chain::witness_object::witness_schedule_type, (elected)(timeshare)(miner)(none) )
 
 FC_REFLECT( morphene::chain::chain_properties,
              (account_creation_fee)
@@ -273,8 +283,9 @@ FC_REFLECT( morphene::chain::witness_object,
              (owner)
              (created)
              (url)(votes)(schedule)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
-             (last_aslot)(last_confirmed_block_num)(signing_key)
+             (last_aslot)(last_confirmed_block_num)(pow_worker)(signing_key)
              (props)
+             (last_work)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
              (available_witness_account_subsidies)
@@ -286,9 +297,10 @@ CHAINBASE_SET_INDEX_TYPE( morphene::chain::witness_vote_object, morphene::chain:
 
 FC_REFLECT( morphene::chain::witness_schedule_object,
              (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_witnesses)(num_scheduled_witnesses)
-             (elected_weight)(timeshare_weight)(witness_pay_normalization_factor)
+             (elected_weight)(timeshare_weight)(miner_weight)(witness_pay_normalization_factor)
              (median_props)(majority_version)
              (max_voted_witnesses)
+             (max_miner_witnesses)
              (max_runner_witnesses)
              (hardfork_required_witnesses)
              (account_subsidy_rd)

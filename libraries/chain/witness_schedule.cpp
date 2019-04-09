@@ -28,7 +28,7 @@ void reset_virtual_schedule_time( database& db )
       {
          wobj.virtual_position = fc::uint128();
          wobj.virtual_last_update = wso.current_virtual_time;
-         wobj.virtual_scheduled_time = MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH2 / (wobj.votes.value+1);
+         wobj.virtual_scheduled_time = MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH / (wobj.votes.value+1);
       } );
    }
 }
@@ -146,6 +146,40 @@ void update_witness_schedule( database& db )
 
    auto num_elected = active_witnesses.size();
 
+   /// Add miners from the top of the mining queue
+   flat_set< witness_id_type > selected_miners;
+   selected_miners.reserve( wso.max_miner_witnesses );
+   const auto& gprops = db.get_dynamic_global_properties();
+   const auto& pow_idx = db.get_index<witness_index>().indices().get<by_pow>();
+   auto mitr = pow_idx.upper_bound(0);
+   while( mitr != pow_idx.end() && selected_miners.size() < wso.max_miner_witnesses )
+   {
+      // Only consider a miner who is not a top voted witness
+      if( selected_voted.find(mitr->id) == selected_voted.end() )
+      {
+         // Only consider a miner who has a valid block signing key
+         if( !( db.get_witness( mitr->owner ).signing_key == public_key_type() ) )
+         {
+            selected_miners.insert(mitr->id);
+            active_witnesses.push_back(mitr->owner);
+            db.modify( *mitr, [&]( witness_object& wo ) { wo.schedule = witness_object::miner; } );
+         }
+      }
+      // Remove processed miner from the queue
+      auto itr = mitr;
+      ++mitr;
+      db.modify( *itr, [&](witness_object& wit )
+      {
+         wit.pow_worker = 0;
+      } );
+      db.modify( gprops, [&]( dynamic_global_property_object& obj )
+      {
+         obj.num_pow_witnesses--;
+      } );
+   }
+
+   auto num_miners = selected_miners.size();
+
    /// Add the running witnesses in the lead
    fc::uint128 new_virtual_time = wso.current_virtual_time;
    const auto& schedule_idx = db.get_index<witness_index>().indices().get<by_schedule_time>();
@@ -169,13 +203,13 @@ void update_witness_schedule( database& db )
       }
    }
 
-   auto num_timeshare = active_witnesses.size() - num_elected;
+   auto num_timeshare = active_witnesses.size() - num_miners - num_elected;
 
    /// Update virtual schedule of processed witnesses
    bool reset_virtual_time = false;
    for( auto itr = processed_witnesses.begin(); itr != processed_witnesses.end(); ++itr )
    {
-      auto new_virtual_scheduled_time = new_virtual_time + MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH2 / ((*itr)->votes.value+1);
+      auto new_virtual_scheduled_time = new_virtual_time + MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH / ((*itr)->votes.value+1);
       if( new_virtual_scheduled_time < new_virtual_time )
       {
          reset_virtual_time = true; /// overflow
@@ -266,7 +300,7 @@ void update_witness_schedule( database& db )
       });
    }
 
-   assert( num_elected + num_timeshare == active_witnesses.size() );
+   assert( num_elected + num_miners + num_timeshare == active_witnesses.size() );
 
    db.modify( wso, [&]( witness_schedule_object& _wso )
    {
@@ -283,6 +317,7 @@ void update_witness_schedule( database& db )
       _wso.num_scheduled_witnesses = std::max< uint8_t >( active_witnesses.size(), 1 );
       _wso.witness_pay_normalization_factor =
            _wso.elected_weight * num_elected
+         + _wso.miner_weight * num_miners
          + _wso.timeshare_weight * num_timeshare;
 
       /// shuffle current shuffled witnesses

@@ -38,6 +38,17 @@ namespace morphene { namespace chain {
          time_point_sec    time;
          account_name_type current_witness;
 
+         /**
+          *  The total POW accumulated, aka the sum of num_pow_witness at the time new POW is added
+          */
+         uint64_t total_pow = -1;
+
+         /**
+          * The current count of how many pending POW witnesses there are, determines the difficulty
+          * of doing pow
+          */
+         uint32_t num_pow_witnesses = 0;
+
          legacy_asset       current_supply             = legacy_asset( 0, MORPH_SYMBOL );
          legacy_asset       total_vesting_fund_morph   = legacy_asset( 0, MORPH_SYMBOL );
          legacy_asset       total_vesting_shares       = legacy_asset( 0, VESTS_SYMBOL );
@@ -99,6 +110,8 @@ FC_REFLECT( morphene::chain::dynamic_global_property_object,
              (head_block_id)
              (time)
              (current_witness)
+             (total_pow)
+             (num_pow_witnesses)
              (current_supply)
              (total_vesting_fund_morph)
              (total_vesting_shares)

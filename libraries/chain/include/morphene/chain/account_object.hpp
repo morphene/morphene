@@ -39,6 +39,7 @@ namespace morphene { namespace chain {
          time_point_sec    last_account_update;
 
          time_point_sec    created;
+         bool              mined = false;
          account_name_type recovery_account;
          account_name_type reset_account = MORPHENE_NULL_ACCOUNT;
          time_point_sec    last_account_recovery;
@@ -359,6 +360,7 @@ namespace morphene { namespace chain {
 FC_REFLECT( morphene::chain::account_object,
              (id)(name)(memo_key)(json_metadata)(proxy)(last_account_update)
              (created)
+             (mined)
              (recovery_account)(last_account_recovery)(reset_account)
              (can_vote)(voting_manabar)
              (balance)

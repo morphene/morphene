@@ -232,9 +232,10 @@ void verify_authority_accounts_exist(
 }
 
 void initialize_account_object( account_object& acc, const account_name_type& name, const public_key_type& key,
-   const dynamic_global_property_object& props, const account_name_type& recovery_account, uint32_t hardfork )
+   const dynamic_global_property_object& props, const bool& mined, const account_name_type& recovery_account, uint32_t hardfork )
 {
    acc.name = name;
+   acc.mined = mined;
    acc.memo_key = key;
    acc.created = props.time;
    acc.voting_manabar.last_update_time = props.time.sec_since_epoch();
@@ -281,7 +282,7 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
 
    _db.create< account_object >( [&]( account_object& acc )
    {
-      initialize_account_object( acc, o.new_account_name, o.memo_key, props, o.creator, _db.get_hardfork() );
+      initialize_account_object( acc, o.new_account_name, o.memo_key, props, false, o.creator, _db.get_hardfork() );
       #ifndef IS_LOW_MEM
          from_string( acc.json_metadata, o.json_metadata );
       #endif
@@ -363,7 +364,7 @@ void account_create_with_delegation_evaluator::do_apply( const account_create_wi
 
    _db.create< account_object >( [&]( account_object& acc )
    {
-      initialize_account_object( acc, o.new_account_name, o.memo_key, props, o.creator, _db.get_hardfork() );
+      initialize_account_object( acc, o.new_account_name, o.memo_key, props, false, o.creator, _db.get_hardfork() );
       acc.received_vesting_shares = o.delegation;
 
       #ifndef IS_LOW_MEM
@@ -913,6 +914,149 @@ void custom_binary_evaluator::do_apply( const custom_binary_operation& o )
    }
 }
 
+template<typename Operation>
+void pow_apply( database& db, Operation o )
+{
+   const auto& dgp = db.get_dynamic_global_properties();
+
+   const auto& witness_by_work = db.get_index<witness_index>().indices().get<by_work>();
+   auto work_itr = witness_by_work.find( o.work.work );
+   if( work_itr != witness_by_work.end() )
+   {
+       FC_ASSERT( !"DUPLICATE WORK DISCOVERED", "${w}  ${witness}",("w",o)("wit",*work_itr) );
+   }
+
+   const auto& accounts_by_name = db.get_index<account_index>().indices().get<by_name>();
+
+   auto itr = accounts_by_name.find(o.get_worker_account());
+   if(itr == accounts_by_name.end())
+   {
+      db.create< account_object >( [&]( account_object& acc )
+      {
+         initialize_account_object( acc, o.get_worker_account(), o.work.worker, dgp, true /*mined*/, account_name_type(), db.get_hardfork() );
+         // ^ empty recovery account parameter means highest voted witness at time of recovery
+      });
+
+      db.create< account_authority_object >( [&]( account_authority_object& auth )
+      {
+         auth.account = o.get_worker_account();
+         auth.owner = authority( 1, o.work.worker, 1);
+         auth.active = auth.owner;
+         auth.posting = auth.owner;
+      });
+   }
+
+   const auto& worker_account = db.get_account( o.get_worker_account() ); // verify it exists
+   const auto& worker_auth = db.get< account_authority_object, by_account >( o.get_worker_account() );
+   FC_ASSERT( worker_auth.active.num_auths() == 1, "Miners can only have one key authority. ${a}", ("a",worker_auth.active) );
+   FC_ASSERT( worker_auth.active.key_auths.size() == 1, "Miners may only have one key authority." );
+   FC_ASSERT( worker_auth.active.key_auths.begin()->first == o.work.worker, "Work must be performed by key that signed the work." );
+   FC_ASSERT( o.block_id == db.head_block_id(), "pow not for last block" );
+   FC_ASSERT( worker_account.last_account_update < db.head_block_time(), "Worker account must not have updated their account this block." );
+
+   fc::sha256 target = db.get_pow_target();
+
+   FC_ASSERT( o.work.work < target, "Work lacks sufficient difficulty." );
+
+   db.modify( dgp, [&]( dynamic_global_property_object& p )
+   {
+      p.total_pow++; // make sure this doesn't break anything...
+      p.num_pow_witnesses++;
+   });
+
+
+   const witness_object* cur_witness = db.find_witness( worker_account.name );
+   if( cur_witness ) {
+      FC_ASSERT( cur_witness->pow_worker == 0, "This account is already scheduled for pow block production." );
+      db.modify(*cur_witness, [&]( witness_object& w ){
+          copy_legacy_chain_properties< true >( w.props, o.props );
+          w.pow_worker        = dgp.total_pow;
+          w.last_work         = o.work.work;
+      });
+   } else {
+      db.create<witness_object>( [&]( witness_object& w )
+      {
+          w.owner             = o.get_worker_account();
+          copy_legacy_chain_properties< true >( w.props, o.props );
+          w.signing_key       = o.work.worker;
+          w.pow_worker        = dgp.total_pow;
+          w.last_work         = o.work.work;
+      });
+   }
+   /// POW reward depends upon whether we are before or after MINER_VOTING kicks in
+   legacy_asset pow_reward = db.get_pow_reward();
+   pow_reward.amount *= MORPHENE_MAX_WITNESSES;
+   db.adjust_supply( pow_reward, true );
+
+   /// pay the witness that includes this POW
+   const auto& inc_witness = db.get_account( dgp.current_witness );
+   db.create_vesting( inc_witness, pow_reward );
+}
+
+void pow_evaluator::do_apply( const pow_operation& o )
+{
+   database& db = this->db();
+
+   const auto& dgp = db.get_dynamic_global_properties();
+   uint32_t target_pow = db.get_pow_summary_target();
+   account_name_type worker_account;
+
+   const auto& work = o.work.get< equihash_pow >();
+   FC_ASSERT( work.prev_block == db.head_block_id(), "Equihash pow op not for last block" );
+   auto recent_block_num = protocol::block_header::num_from_id( work.input.prev_block );
+   FC_ASSERT( recent_block_num > dgp.last_irreversible_block_num,
+      "Equihash pow done for block older than last irreversible block num" );
+   FC_ASSERT( work.pow_summary < target_pow, "Insufficient work difficulty. Work: ${w}, Target: ${t}", ("w",work.pow_summary)("t", target_pow) );
+   worker_account = work.input.worker_account;
+
+   FC_ASSERT( o.props.maximum_block_size >= MORPHENE_MIN_BLOCK_SIZE_LIMIT * 2, "Voted maximum block size is too small." );
+
+   db.modify( dgp, [&]( dynamic_global_property_object& p )
+   {
+      p.total_pow++;
+      p.num_pow_witnesses++;
+   });
+
+   const auto& accounts_by_name = db.get_index<account_index>().indices().get<by_name>();
+   auto itr = accounts_by_name.find( worker_account );
+   if(itr == accounts_by_name.end())
+   {
+      FC_ASSERT( o.new_owner_key.valid(), "New owner key is not valid." );
+      db.create< account_object >( [&]( account_object& acc )
+      {
+         initialize_account_object( acc, worker_account, *o.new_owner_key, dgp, true /*mined*/, account_name_type(), _db.get_hardfork() );
+         // ^ empty recovery account parameter means highest voted witness at time of recovery
+      });
+
+      db.create< account_authority_object >( [&]( account_authority_object& auth )
+      {
+         auth.account = worker_account;
+         auth.owner = authority( 1, *o.new_owner_key, 1);
+         auth.active = auth.owner;
+         auth.posting = auth.owner;
+      });
+
+      db.create<witness_object>( [&]( witness_object& w )
+      {
+          w.owner             = worker_account;
+          copy_legacy_chain_properties< true >( w.props, o.props );
+          w.signing_key       = *o.new_owner_key;
+          w.pow_worker        = dgp.total_pow;
+      });
+   }
+   else
+   {
+      FC_ASSERT( !o.new_owner_key.valid(), "Cannot specify an owner key unless creating account." );
+      const witness_object* cur_witness = db.find_witness( worker_account );
+      FC_ASSERT( cur_witness, "Witness must be created for existing account before mining.");
+      FC_ASSERT( cur_witness->pow_worker == 0, "This account is already scheduled for pow block production." );
+      db.modify(*cur_witness, [&]( witness_object& w )
+      {
+          copy_legacy_chain_properties< true >( w.props, o.props );
+          w.pow_worker        = dgp.total_pow;
+      });
+   }}
+
 void claim_account_evaluator::do_apply( const claim_account_operation& o )
 {
    const auto& creator = _db.get_account( o.creator );
@@ -985,7 +1129,7 @@ void create_claimed_account_evaluator::do_apply( const create_claimed_account_op
 
    _db.create< account_object >( [&]( account_object& acc )
    {
-      initialize_account_object( acc, o.new_account_name, o.memo_key, props, o.creator, _db.get_hardfork() );
+      initialize_account_object( acc, o.new_account_name, o.memo_key, props, false, o.creator, _db.get_hardfork() );
       #ifndef IS_LOW_MEM
          from_string( acc.json_metadata, o.json_metadata );
       #endif

@@ -59,4 +59,12 @@ private:
    std::unique_ptr< detail::witness_plugin_impl > my;
 };
 
+/// @group Some useful tools for boost::program_options arguments using vectors of JSON strings
+/// @{
+template<typename T>
+T dejsonify(const string& s)
+{
+   return fc::json::from_string(s).as<T>();
+}
+
 } } } // morphene::plugins::witness

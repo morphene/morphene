@@ -67,13 +67,27 @@ namespace detail {
       block_production_condition::block_production_condition_enum block_production_loop();
       block_production_condition::block_production_condition_enum maybe_produce_block(fc::mutable_variant_object& capture);
 
+      void on_applied_block( const chain::block_notification& b );
+      void start_mining( const fc::ecc::public_key& pub, const fc::ecc::private_key& pk,
+                         const string& name, const morphene::chain::block_notification& b );
+
+      boost::program_options::variables_map _options;
       bool     _production_enabled              = false;
       uint32_t _required_witness_participation  = 33 * MORPHENE_1_PERCENT;
-      uint32_t _production_skip_flags           = chain::database::skip_nothing;
+      uint32_t _production_skip_flags = morphene::chain::database::skip_nothing;
+      uint32_t _mining_threads = 0;
+
+      uint64_t         _head_block_num       = 0;
+      uint64_t         _total_hashes         = 0;
+      fc::time_point   _hash_start_time;
+
+      std::vector<std::shared_ptr<fc::thread> > _thread_pool;
 
       std::map< morphene::protocol::public_key_type, fc::ecc::private_key > _private_keys;
-      std::set< morphene::protocol::account_name_type >                     _witnesses;
-      boost::asio::deadline_timer                                        _timer;
+      std::set<string>                                                      _witnesses;
+      std::map<string,public_key_type>                                      _miners;
+      chain::legacy_chain_properties                                        _miner_prop_vote;
+      boost::asio::deadline_timer                                           _timer;
 
       std::set< morphene::protocol::account_name_type >                     _dupe_customs;
 
@@ -83,6 +97,7 @@ namespace detail {
       boost::signals2::connection   _post_apply_block_conn;
       boost::signals2::connection   _pre_apply_operation_conn;
       boost::signals2::connection   _post_apply_operation_conn;
+      boost::signals2::connection   _applied_block_conn;
    };
 
    void check_memo( const string& memo, const chain::account_object& account, const account_authority_object& auth )
@@ -302,7 +317,7 @@ namespace detail {
       }
 
       //
-      // this assert should not fail, because now <= db.head_block_time()
+      // this assert should not fail, because now <= _db.head_block_time()
       // should have resulted in slot == 0.
       //
       // if this assert triggers, there is a serious bug in get_slot_at_time()
@@ -321,9 +336,9 @@ namespace detail {
 
       fc::time_point_sec scheduled_time = _db.get_slot_time( slot );
       chain::public_key_type scheduled_key = _db.get< chain::witness_object, chain::by_name >(scheduled_witness).signing_key;
-      auto private_key_itr = _private_keys.find( scheduled_key );
+      auto private_key_itr = this->_private_keys.find( scheduled_key );
 
-      if( private_key_itr == _private_keys.end() )
+      if( private_key_itr == this->_private_keys.end() )
       {
          capture("scheduled_witness", scheduled_witness);
          capture("scheduled_key", scheduled_key);
@@ -355,6 +370,165 @@ namespace detail {
       return block_production_condition::produced;
    }
 
+   /**
+    * Every time a block is produced, this method is called. This method will iterate through all
+    * mining accounts specified by commandline and for which the private key is known. The first
+    * account that isn't already scheduled in the mining queue is selected to mine for the
+    * BLOCK_INTERVAL minus 1 second. If a POW is solved or a a new block comes in then the
+    * worker will stop early.
+    *
+    * Work is farmed out to N threads in parallel based upon the value specified on the command line.
+    *
+    * The miner assumes that the next block will be produced on time and that network propagation
+    * will take at least 1 second. This 1 second consists of the time it took to receive the block
+    * and how long it will take to broadcast the work. In other words, we assume 0.5s broadcast times
+    * and therefore do not even attempt work that cannot be delivered on time.
+    */
+   void witness_plugin_impl::on_applied_block(const chain::block_notification& b)
+   { try {
+      ilog( "Enter On Applied Block" );
+      if( !this->_mining_threads || this->_miners.size() == 0 ) return;
+      auto& db = this->_db;
+      const auto& dgp = db.get_dynamic_global_properties();
+      double hps   = (this->_total_hashes*1000000)/(fc::time_point::now()-this->_hash_start_time).count();
+      uint64_t i_hps = uint64_t(hps+0.5);
+
+      uint32_t summary_target = db.get_pow_summary_target();
+
+      double target = fc::sha256::inverse_approx_log_32_double( summary_target );
+      static const double max_target = std::ldexp( 1.0, 256 );
+
+      double seconds_needed = 0.0;
+      if( i_hps > 0 )
+      {
+         double hashes_needed = max_target / target;
+         seconds_needed = hashes_needed / i_hps;
+      }
+
+      uint64_t minutes_needed = uint64_t( seconds_needed / 60.0 + 0.5 );
+
+      fc::sha256 hash_target;
+      hash_target.set_to_inverse_approx_log_32( summary_target );
+
+      if( this->_total_hashes > 0 )
+         ilog( "hash rate: ${x} hps  target: ${t} queue: ${l} estimated time to produce: ${m} minutes",
+                 ("x",i_hps) ("t",hash_target.str()) ("m", minutes_needed ) ("l",dgp.num_pow_witnesses)
+            );
+
+
+     this->_head_block_num = b.block.block_num();
+     /// save these variables to be captured by worker lambda
+
+     for( const auto& miner : this->_miners ) {
+       const auto* w = db.find_witness( miner.first );
+       if( !w || w->pow_worker == 0 ) {
+          auto miner_pub_key = miner.second; //a.active.key_auths.begin()->first;
+          auto priv_key_itr = this->_private_keys.find(miner_pub_key);
+          if( priv_key_itr == this->_private_keys.end() ) {
+             continue; /// skipping miner for lack of private key
+          }
+
+          auto miner_priv_key = priv_key_itr->second;
+          start_mining( miner_pub_key, priv_key_itr->second, miner.first, b );
+          break;
+       } else {
+           ilog( "Skipping miner ${m} because it is already scheduled to produce a block", ("m",miner) );
+       }
+     } // for miner in miners
+
+   } catch ( const fc::exception& e ) { ilog( "exception thrown while attempting to mine" ); }
+   }
+
+   void witness_plugin_impl::start_mining(
+      const fc::ecc::public_key& pub,
+      const fc::ecc::private_key& pk,
+      const string& miner,
+      const morphene::chain::block_notification& b )
+   {
+       ilog( "Enter Start Mining Function" );
+       static uint64_t seed = fc::time_point::now().time_since_epoch().count();
+       static uint64_t start = fc::city_hash64( (const char*)&seed, sizeof(seed) );
+
+       auto head_block_num  = b.block.block_num();
+       auto head_block_time = b.block.timestamp;
+       auto block_id = b.block.id();
+
+       fc::thread* mainthread = &fc::thread::current();
+
+       this->_total_hashes = 0;
+       this->_hash_start_time = fc::time_point::now();
+
+       auto stop = head_block_time + fc::seconds( MORPHENE_BLOCK_INTERVAL * 2 );
+
+       auto& db = this->_db;
+
+       uint32_t thread_num = 0;
+       uint32_t num_threads = this->_mining_threads;
+       uint32_t target = db.get_pow_summary_target();
+       const auto& acct_idx  = db.get_index< chain::account_index >().indices().get< chain::by_name >();
+       auto acct_it = acct_idx.find( miner );
+       bool has_account = (acct_it != acct_idx.end());
+       for( auto& t : this->_thread_pool )
+       {
+          t->async( [=]()
+          {
+             chain::pow_operation op;
+             chain::pow work;
+             work.input.prev_block = block_id;
+             work.input.worker_account = miner;
+             work.input.nonce = start + thread_num;
+             op.props = this->_miner_prop_vote;
+             while( true )
+             {
+                //  if( ((work.input.nonce/num_threads) % 1000) == 0 ) idump((work.input.nonce));
+                if( fc::time_point::now() > stop )
+                {
+                   ilog( "stop mining due to time out, nonce: ${n}", ("n",work.input.nonce) );
+                   return;
+                }
+                if( this->_head_block_num != head_block_num )
+                {
+                   wlog( "stop mining due new block arrival, nonce: ${n}", ("n",work.input.nonce));
+                   return;
+                }
+                ++this->_total_hashes;
+
+                work.input.nonce += num_threads;
+                work.create( block_id, miner, work.input.nonce );
+                if( work.pow_summary < target )
+                {
+                   ++this->_head_block_num; /// signal other workers to stop
+
+                   chain::signed_transaction trx;
+                   op.work = work;
+                   if( !has_account )
+                      op.new_owner_key = pub;
+                   trx.operations.push_back(op);
+                   trx.ref_block_num = head_block_num;
+                   trx.ref_block_prefix = work.input.prev_block._hash[1];
+                   trx.set_expiration( head_block_time + MORPHENE_MAX_TIME_UNTIL_EXPIRATION );
+                   trx.sign( pk, MORPHENE_CHAIN_ID, fc::ecc::fc_canonical );
+                   mainthread->async( [this,miner,trx]()
+                   {
+                      try
+                      {
+                         appbase::app().get_plugin< morphene::plugins::chain::chain_plugin >().db().push_transaction( trx );
+                         ilog( "Broadcasting Proof of Work for ${miner}", ("miner",miner) );
+                         appbase::app().get_plugin< morphene::plugins::p2p::p2p_plugin >().broadcast_transaction( trx );
+                      }
+                      catch( const fc::exception& e )
+                      {
+                         wdump((e.to_detail_string()));
+                      }
+                   } );
+                   return;
+                }
+             }
+          } );
+          thread_num++;
+       }
+   }
+
 } // detail
 
 
@@ -371,8 +545,11 @@ void witness_plugin::set_program_options(
          ("required-participation", bpo::value< uint32_t >()->default_value( 33 ), "Percent of witnesses (0-99) that must be participating in order to produce blocks")
          ("witness,w", bpo::value<vector<string>>()->composing()->multitoken(),
             ("name of witness controlled by this node (e.g. " + witness_id_example + " )" ).c_str() )
+         ("miner,m", bpo::value<vector<string>>()->composing()->multitoken(), "name of miner and its private key (e.g. [\"account\",\"WIF PRIVATE KEY\"] )" )
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken(), "WIF PRIVATE KEY to be used by one or more witnesses" )
          ("witness-skip-enforce-bandwidth", bpo::value<bool>()->default_value( true ), "Skip enforcing bandwidth restrictions. Default is true in favor of rc_plugin." )
+         ("miner-account-creation-fee", bpo::value<uint64_t>()->implicit_value(100000),"Account creation fee to be voted on upon successful POW - Minimum fee is 100.000 MORPH (written as 100000)")
+         ("miner-maximum-block-size", bpo::value<uint32_t>()->implicit_value(131072),"Maximum block size (in bytes) to be voted on upon successful POW - Max block size must be between 128 KB and 750 MB")
          ;
    cli.add_options()
          ("enable-stale-production", bpo::bool_switch()->default_value( false ), "Enable block production, even if the chain is stale.")
@@ -387,6 +564,29 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
 
    MORPHENE_LOAD_VALUE_SET( options, "witness", my->_witnesses, morphene::protocol::account_name_type )
 
+   if( options.count("miner") ) {
+
+      const vector<string> miner_to_wif_pair_strings = options["miner"].as<vector<string>>();
+      for( auto p : miner_to_wif_pair_strings )
+      {
+         auto m = dejsonify<pair<string,string>>(p);
+         idump((m));
+
+         fc::optional<fc::ecc::private_key> private_key = morphene::utilities::wif_to_key(m.second);
+         FC_ASSERT( private_key.valid(), "unable to parse private key" );
+         my->_private_keys[private_key->get_public_key()] = *private_key;
+         my->_miners[m.first] = private_key->get_public_key();
+      }
+   }
+
+   if( options.count("mining-threads") )
+   {
+      my->_mining_threads = std::min( options["mining-threads"].as<uint32_t>(), uint32_t(64) );
+      my->_thread_pool.resize( my->_mining_threads );
+      for( uint32_t i = 0; i < my->_mining_threads; ++i )
+         my->_thread_pool[i] = std::make_shared<fc::thread>();
+   }
+
    if( options.count("private-key") )
    {
       const std::vector<std::string> keys = options["private-key"].as<std::vector<std::string>>();
@@ -396,6 +596,31 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
          FC_ASSERT( private_key.valid(), "unable to parse private key" );
          my->_private_keys[private_key->get_public_key()] = *private_key;
       }
+   }
+
+   if( options.count("miner-account-creation-fee") )
+   {
+      const uint64_t account_creation_fee = options["miner-account-creation-fee"].as<uint64_t>();
+
+      if( account_creation_fee < MORPHENE_MIN_ACCOUNT_CREATION_FEE )
+         wlog( "miner-account-creation-fee is below the minimum fee, using minimum instead" );
+      else
+         my->_miner_prop_vote.account_creation_fee.amount = account_creation_fee;
+   }
+
+   if( options.count( "miner-maximum-block-size" ) )
+   {
+      const uint32_t maximum_block_size = options["miner-maximum-block-size"].as<uint32_t>();
+
+      if( maximum_block_size < MORPHENE_MIN_BLOCK_SIZE_LIMIT )
+         wlog( "miner-maximum-block-size is below the minimum block size limit, using default of 128 KB instead" );
+      else if ( maximum_block_size > MORPHENE_MAX_BLOCK_SIZE )
+      {
+         wlog( "miner-maximum-block-size is above the maximum block size limit, using maximum of 750 MB instead" );
+         my->_miner_prop_vote.maximum_block_size = MORPHENE_MAX_BLOCK_SIZE;
+      }
+      else
+         my->_miner_prop_vote.maximum_block_size = maximum_block_size;
    }
 
    my->_production_enabled = options.at( "enable-stale-production" ).as< bool >();
@@ -420,6 +645,8 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
       [&]( const chain::operation_notification& note ){ my->on_pre_apply_operation( note ); }, *this, 0);
    my->_post_apply_operation_conn = my->_db.add_pre_apply_operation_handler(
       [&]( const chain::operation_notification& note ){ my->on_post_apply_operation( note ); }, *this, 0);
+   my->_applied_block_conn = my->_db.add_post_apply_block_handler(
+      [&]( const chain::block_notification& note ){ my->on_applied_block( note ); }, *this, 0);
 
    if( my->_witnesses.size() && my->_private_keys.size() )
       my->_chain_plugin.set_write_lock_hold_time( -1 );
@@ -443,6 +670,14 @@ void witness_plugin::plugin_startup()
       my->schedule_production_loop();
    } else
       elog("No witnesses configured! Please add witness IDs and private keys to configuration.");
+   if( !my->_miners.empty() )
+   {
+      ilog("Starting mining...");
+   }
+   else
+   {
+      elog("No miners configured! Please add miner names and private keys to configuration.");
+   }
    ilog("witness plugin:  plugin_startup() end");
    } FC_CAPTURE_AND_RETHROW() }
 
@@ -450,6 +685,12 @@ void witness_plugin::plugin_shutdown()
 {
    try
    {
+      if( !my->_miners.empty() )
+      {
+         ilog( "shutting down mining threads" );
+         my->_thread_pool.clear();
+      }
+
       chain::util::disconnect_signal( my->_pre_apply_block_conn );
       chain::util::disconnect_signal( my->_post_apply_block_conn );
       chain::util::disconnect_signal( my->_pre_apply_operation_conn );

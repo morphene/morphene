@@ -63,6 +63,7 @@ class database_api_impl
          (verify_authority)
          (verify_account_authority)
          (verify_signatures)
+         (get_miner_queue)
          (get_state)
          (get_chain_properties)
          (get_next_scheduled_hardfork)
@@ -334,6 +335,23 @@ DEFINE_API_IMPL( database_api_impl, list_witness_votes )
    }
 
    return result;
+}
+
+DEFINE_API_IMPL( database_api_impl, get_miner_queue )
+{
+   return _db.with_read_lock( [&]()
+   {
+      vector<account_name_type> result;
+      const auto& pow_idx = _db.get_index<witness_index>().indices().get<by_pow>();
+
+      auto itr = pow_idx.upper_bound(0);
+      while( itr != pow_idx.end() ) {
+         if( itr->pow_worker )
+            result.push_back( itr->owner );
+         ++itr;
+      }
+      return result;
+   });
 }
 
 DEFINE_API_IMPL( database_api_impl, get_active_witnesses )
@@ -940,6 +958,9 @@ DEFINE_API_IMPL( database_api_impl, get_state )
          //    // push transfers if account history enabled
          // }
       }
+      else if( part[0] == "miners" || part[0] == "~miners") {
+         _state.pow_queue = get_miner_queue({});
+      }
       else {
          elog( "What... no matches" );
       }
@@ -1175,6 +1196,7 @@ DEFINE_READ_APIS( database_api,
    (verify_authority)
    (verify_account_authority)
    (verify_signatures)
+   (get_miner_queue)
    (get_state)
    (get_chain_properties)
    (get_next_scheduled_hardfork)

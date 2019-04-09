@@ -166,6 +166,7 @@ struct api_witness_object
       total_missed( w.total_missed ),
       last_aslot( w.last_aslot ),
       last_confirmed_block_num( w.last_confirmed_block_num ),
+      pow_worker( w.pow_worker ),
       signing_key( w.signing_key ),
       props( w.props ),
       votes( w.votes ),
@@ -187,6 +188,7 @@ struct api_witness_object
    uint32_t          total_missed = 0;
    uint64_t          last_aslot = 0;
    uint64_t          last_confirmed_block_num = 0;
+   uint64_t          pow_worker;
    public_key_type   signing_key;
    chain_properties  props;
    share_type        votes;
@@ -300,6 +302,7 @@ struct state
 
    map< string, api_account_object >                  accounts;
 
+   vector< account_name_type >                        pow_queue;
    map< string, api_witness_object >                  witnesses;
    api_witness_schedule_object                        witness_schedule;
    string                                             error;
@@ -383,7 +386,7 @@ FC_REFLECT( morphene::plugins::database_api::api_witness_object,
              (owner)
              (created)
              (url)(votes)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
-             (last_aslot)(last_confirmed_block_num)(signing_key)
+             (last_aslot)(last_confirmed_block_num)(pow_worker)(signing_key)
              (props)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
@@ -425,7 +428,7 @@ FC_REFLECT( morphene::plugins::database_api::api_hardfork_property_object,
           )
 
 FC_REFLECT( morphene::plugins::database_api::state,
-            (current_route)(props)(accounts)(witnesses)(witness_schedule)(error) )
+            (current_route)(props)(accounts)(pow_queue)(witnesses)(witness_schedule)(error) )
 
 FC_REFLECT( morphene::plugins::database_api::api_chain_properties,
             (account_creation_fee)(maximum_block_size)(account_subsidy_budget)(account_subsidy_decay)

@@ -17,6 +17,7 @@ class database_api_impl;
 typedef arg_type api_name ## _args;                         \
 typedef return_type api_name ## _return;
 
+DEFINE_API_ARGS( get_miner_queue,                        vector< variant >,   vector<account_name_type> )
 DEFINE_API_ARGS( get_state,                              vector< variant >,   state )
 DEFINE_API_ARGS( get_chain_properties,                   vector< variant >,   api_chain_properties )
 DEFINE_API_ARGS( get_next_scheduled_hardfork,            vector< variant >,   scheduled_hardfork )
@@ -135,6 +136,8 @@ class database_api
           * using the existing authority structures in Morphene
           */
          (verify_signatures)
+
+         (get_miner_queue)
 
          (get_state)
          (get_chain_properties)

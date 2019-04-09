@@ -5,6 +5,8 @@
 #include <morphene/protocol/validation.hpp>
 #include <morphene/protocol/legacy_asset.hpp>
 
+#include <fc/crypto/equihash.hpp>
+
 namespace morphene { namespace protocol {
 
    void validate_auth_size( const authority& a );
@@ -425,6 +427,55 @@ namespace morphene { namespace protocol {
       void get_required_authorities( vector< authority >& a )const{ for( const auto& i : required_auths ) a.push_back( i ); }
    };
 
+   struct pow_input
+   {
+      account_name_type worker_account;
+      block_id_type     prev_block;
+      uint64_t          nonce = 0;
+   };
+
+
+   struct pow
+   {
+      pow_input        input;
+      uint32_t          pow_summary = 0;
+
+      void create( const block_id_type& prev_block, const account_name_type& account_name, uint64_t nonce );
+      void validate()const;
+   };
+
+   struct equihash_pow
+   {
+      pow_input           input;
+      fc::equihash::proof  proof;
+      block_id_type        prev_block;
+      uint32_t             pow_summary = 0;
+
+      void create( const block_id_type& recent_block, const account_name_type& account_name, uint32_t nonce );
+      void validate() const;
+   };
+
+   typedef fc::static_variant< pow, equihash_pow > pow_work;
+
+   struct pow_operation : public base_operation
+   {
+      pow_work                      work;
+      optional< public_key_type >   new_owner_key;
+      legacy_chain_properties       props;
+
+      void validate()const;
+
+      void get_required_active_authorities( flat_set<account_name_type>& a )const;
+
+      void get_required_authorities( vector< authority >& a )const
+      {
+         if( new_owner_key )
+         {
+            a.push_back( authority( 1, *new_owner_key, 1 ) );
+         }
+      }
+   };
+
 
    /**
     * All account recovery requests come from a listed recovery account. This
@@ -662,6 +713,13 @@ FC_REFLECT( morphene::protocol::account_witness_proxy_operation, (account)(proxy
 FC_REFLECT( morphene::protocol::custom_operation, (required_auths)(id)(data) )
 FC_REFLECT( morphene::protocol::custom_json_operation, (required_auths)(required_posting_auths)(id)(json) )
 FC_REFLECT( morphene::protocol::custom_binary_operation, (required_owner_auths)(required_active_auths)(required_posting_auths)(required_auths)(id)(data) )
+
+FC_REFLECT( morphene::protocol::pow, (input)(pow_summary) )
+FC_REFLECT( morphene::protocol::pow_input, (worker_account)(prev_block)(nonce) )
+FC_REFLECT( morphene::protocol::equihash_pow, (input)(proof)(prev_block)(pow_summary) )
+
+FC_REFLECT_TYPENAME( morphene::protocol::pow_work )
+FC_REFLECT( morphene::protocol::pow_operation, (work)(new_owner_key)(props) )
 
 FC_REFLECT( morphene::protocol::escrow_transfer_operation, (from)(to)(morph_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) );
 FC_REFLECT( morphene::protocol::escrow_approve_operation, (from)(to)(agent)(who)(escrow_id)(approve) );

@@ -492,6 +492,23 @@ void rc_plugin_impl::on_first_block()
    return;
 }
 
+struct get_worker_name_visitor
+{
+   typedef account_name_type result_type;
+
+   template< typename WorkType >
+   account_name_type operator()( const WorkType& work )
+   {   return work.input.worker_account;    }
+};
+
+account_name_type get_worker_name( const pow_work& work )
+{
+   // Even though in both cases the result is work.input.worker_account,
+   // we have to use a visitor because pow_work is a static_variant
+   get_worker_name_visitor vtor;
+   return work.visit( vtor );
+}
+
 //
 // This visitor performs the following functions:
 //
@@ -617,6 +634,12 @@ struct pre_apply_operation_visitor
       regenerate( MORPHENE_NULL_ACCOUNT );
    }
 
+   void operator()( const pow_operation& op )const
+   {
+      regenerate< true >( get_worker_name( op.work ) );
+      regenerate< false >( _current_witness );
+   }
+
    template< typename Op >
    void operator()( const Op& op )const {}
 };
@@ -663,6 +686,14 @@ struct post_apply_operation_visitor
    void operator()( const create_claimed_account_operation& op )const
    {
       create_rc_account( _db, _current_time, op.new_account_name, _db.get_witness_schedule_object().median_props.account_creation_fee );
+   }
+
+   void operator()( const pow_operation& op )const
+   {
+      auto worker_name = get_worker_name( op.work );
+      create_rc_account< true >( _db, _current_time, worker_name, legacy_asset( 0, MORPH_SYMBOL ) );
+      _mod_accounts.emplace_back( worker_name );
+      _mod_accounts.emplace_back( _current_witness );
    }
 
    void operator()( const transfer_to_vesting_operation& op )

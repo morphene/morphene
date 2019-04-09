@@ -27,6 +27,8 @@ namespace morphene { namespace protocol {
             custom_json_operation,
             custom_binary_operation,
 
+            pow_operation,
+
             set_withdraw_vesting_route_operation,
             claim_account_operation,
             create_claimed_account_operation,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Steemit, Inc., and contributors.
+ * Copyright (c) 2016 Boone Development, and contributors.
  */
 #pragma once
 #include <morphene/protocol/hardfork.hpp>
@@ -68,10 +68,10 @@
 #define MORPHENE_NUM_INIT_WITNESSES              1
 #define MORPHENE_INIT_TIME                       (fc::time_point_sec());
 
-#define MORPHENE_MAX_WITNESSES                   21
-
-#define MORPHENE_MAX_VOTED_WITNESSES             20
-#define MORPHENE_MAX_RUNNER_WITNESSES            1
+#define MORPHENE_MAX_VOTED_WITNESSES             19 /// elected
+#define MORPHENE_MAX_MINER_WITNESSES             1  /// miner
+#define MORPHENE_MAX_RUNNER_WITNESSES            1  /// timeshare
+#define MORPHENE_MAX_WITNESSES                   (MORPHENE_MAX_VOTED_WITNESSES+MORPHENE_MAX_MINER_WITNESSES+MORPHENE_MAX_RUNNER_WITNESSES) /// 21 is more than enough
 
 #define MORPHENE_HARDFORK_REQUIRED_WITNESSES     17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
 #define MORPHENE_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
@@ -101,6 +101,11 @@
 #define MORPHENE_CREATE_ACCOUNT_DELEGATION_TIME     fc::days(30)
 
 #define MORPHENE_MIN_PRODUCER_REWARD             legacy_asset( 1000, MORPH_SYMBOL )
+#define MORPHENE_MIN_POW_REWARD									 MORPHENE_MIN_PRODUCER_REWARD
+
+#define MORPHENE_MINING_REWARD                   asset( 1000, STEEM_SYMBOL )
+#define MORPHENE_EQUIHASH_N                      140
+#define MORPHENE_EQUIHASH_K                      6
 
 #define MORPHENE_ACTIVE_CHALLENGE_FEE            legacy_asset( 2000, MORPH_SYMBOL )
 #define MORPHENE_OWNER_CHALLENGE_FEE             legacy_asset( 30000, MORPH_SYMBOL )
@@ -139,7 +144,8 @@
 
 // These constants add up to GRAPHENE_100_PERCENT.  Each GRAPHENE_1_PERCENT is equivalent to 1% per year APY
 // *including the corresponding 9x vesting rewards*
-#define MORPHENE_PRODUCER_APR_PERCENT            10000
+#define MORPHENE_PRODUCER_APR_PERCENT            9000
+#define MORPHENE_POW_APR_PERCENT                 1000
 
 #define MORPHENE_MIN_ACCOUNT_NAME_LENGTH          3
 #define MORPHENE_MAX_ACCOUNT_NAME_LENGTH         16
@@ -178,8 +184,7 @@
 
 #define MORPHENE_IRREVERSIBLE_THRESHOLD          (75 * MORPHENE_1_PERCENT)
 
-#define MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH  ( fc::uint128(uint64_t(-1)) )
-#define MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH2 ( fc::uint128::max_value() )
+#define MORPHENE_VIRTUAL_SCHEDULE_LAP_LENGTH  ( fc::uint128::max_value() )
 
 #define MORPHENE_DELEGATION_RETURN_PERIOD  (MORPHENE_VOTING_MANA_REGENERATION_SECONDS)
 
