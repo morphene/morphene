@@ -1122,7 +1122,7 @@ uint32_t database::get_pow_summary_target()const
    if( dgp.num_pow_witnesses >= 1004 )
       return 0;
 
-   return (0xFE00 - 0x0040 * dgp.num_pow_witnesses ) << 0x10;
+   return (0xFC00 - 0x0040 * dgp.num_pow_witnesses) << 0x10;
 }
 
 void database::adjust_proxied_witness_votes( const account_object& a,
@@ -1519,14 +1519,14 @@ void database::process_subsidized_accounts()
    }
 }
 
-asset database::get_pow_reward()const
+legacy_asset database::get_pow_reward()const
 {
    const auto& props = get_dynamic_global_properties();
 
 #ifndef IS_TEST_NET
    /// 0 block rewards until at least MORPHENE_MAX_WITNESSES have produced a POW
    if( props.num_pow_witnesses < MORPHENE_MAX_WITNESSES && props.head_block_number < MORPHENE_START_VESTING_BLOCK )
-      return asset( 0, MORPH_SYMBOL );
+      return legacy_asset( 0, MORPH_SYMBOL );
 #endif
 
    FC_ASSERT( MORPHENE_BLOCK_INTERVAL == 3, "this code assumes a 3-second time interval" );

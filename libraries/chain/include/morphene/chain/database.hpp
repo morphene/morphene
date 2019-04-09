@@ -340,7 +340,7 @@ namespace morphene { namespace chain {
          void account_recovery_processing();
          void expire_escrow_ratification();
 
-         asset get_pow_reward()const;
+         legacy_asset get_pow_reward()const;
 
          time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;

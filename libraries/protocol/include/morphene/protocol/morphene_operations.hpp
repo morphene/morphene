@@ -5,7 +5,7 @@
 #include <morphene/protocol/validation.hpp>
 #include <morphene/protocol/legacy_asset.hpp>
 
-#include <fc/crypto/equihash.hpp>
+// #include <fc/crypto/equihash.hpp>
 
 namespace morphene { namespace protocol {
 
@@ -444,18 +444,20 @@ namespace morphene { namespace protocol {
       void validate()const;
    };
 
-   struct equihash_pow
-   {
-      pow_input           input;
-      fc::equihash::proof  proof;
-      block_id_type        prev_block;
-      uint32_t             pow_summary = 0;
+   typedef fc::static_variant< pow > pow_work;
+   
+   // struct equihash_pow
+   // {
+   //    pow_input           input;
+   //    fc::equihash::proof  proof;
+   //    block_id_type        prev_block;
+   //    uint32_t             pow_summary = 0;
 
-      void create( const block_id_type& recent_block, const account_name_type& account_name, uint32_t nonce );
-      void validate() const;
-   };
+   //    void create( const block_id_type& recent_block, const account_name_type& account_name, uint32_t nonce );
+   //    void validate() const;
+   // };
 
-   typedef fc::static_variant< pow, equihash_pow > pow_work;
+   // typedef fc::static_variant< pow, equihash_pow > pow_work;
 
    struct pow_operation : public base_operation
    {
@@ -716,7 +718,7 @@ FC_REFLECT( morphene::protocol::custom_binary_operation, (required_owner_auths)(
 
 FC_REFLECT( morphene::protocol::pow, (input)(pow_summary) )
 FC_REFLECT( morphene::protocol::pow_input, (worker_account)(prev_block)(nonce) )
-FC_REFLECT( morphene::protocol::equihash_pow, (input)(proof)(prev_block)(pow_summary) )
+// FC_REFLECT( morphene::protocol::equihash_pow, (input)(proof)(prev_block)(pow_summary) )
 
 FC_REFLECT_TYPENAME( morphene::protocol::pow_work )
 FC_REFLECT( morphene::protocol::pow_operation, (work)(new_owner_key)(props) )

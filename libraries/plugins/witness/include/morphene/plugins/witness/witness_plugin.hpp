@@ -56,6 +56,10 @@ public:
    virtual void plugin_shutdown() override;
 
 private:
+   void on_applied_block( const chain::block_notification& b );
+   void start_mining( const fc::ecc::public_key& pub, const fc::ecc::private_key& pk,
+                      const string& name, const morphene::chain::block_notification& b );
+
    std::unique_ptr< detail::witness_plugin_impl > my;
 };
 
