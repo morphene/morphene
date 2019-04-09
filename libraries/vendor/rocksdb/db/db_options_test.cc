@@ -134,7 +134,7 @@ TEST_F(DBOptionsTest, SetBytesPerSync) {
   const std::string kValue(kValueSize, 'v');
   ASSERT_EQ(options.bytes_per_sync, dbfull()->GetDBOptions().bytes_per_sync);
   rocksdb::SyncPoint::GetInstance()->SetCallBack(
-      "WritableFileWriter::RangeSync:0", [&](void* arg) {
+      "WritableFileWriter::RangeSync:0", [&](void* /*arg*/) {
         counter++;
       });
 
@@ -183,7 +183,7 @@ TEST_F(DBOptionsTest, SetWalBytesPerSync) {
   int counter = 0;
   int low_bytes_per_sync = 0;
   rocksdb::SyncPoint::GetInstance()->SetCallBack(
-      "WritableFileWriter::RangeSync:0", [&](void* arg) {
+      "WritableFileWriter::RangeSync:0", [&](void* /*arg*/) {
         counter++;
       });
   rocksdb::SyncPoint::GetInstance()->EnableProcessing();
@@ -242,11 +242,12 @@ TEST_F(DBOptionsTest, WritableFileMaxBufferSize) {
   ASSERT_EQ(unmatch_cnt, 0);
   ASSERT_GE(match_cnt, 11);
 
-  buffer_size = 512 * 1024;
-  match_cnt = 0;
-  unmatch_cnt = 0;
   ASSERT_OK(
       dbfull()->SetDBOptions({{"writable_file_max_buffer_size", "524288"}}));
+  buffer_size = 512 * 1024;
+  match_cnt = 0;
+  unmatch_cnt = 0;  // SetDBOptions() will create a WriteableFileWriter
+
   ASSERT_EQ(buffer_size,
             dbfull()->GetDBOptions().writable_file_max_buffer_size);
   i = 0;
@@ -513,13 +514,45 @@ TEST_F(DBOptionsTest, SetStatsDumpPeriodSec) {
   }
 }
 
+TEST_F(DBOptionsTest, RunStatsDumpPeriodSec) {
+  Options options;
+  options.create_if_missing = true;
+  options.stats_dump_period_sec = 5;
+  std::unique_ptr<rocksdb::MockTimeEnv> mock_env;
+  mock_env.reset(new rocksdb::MockTimeEnv(env_));
+  mock_env->set_current_time(0); // in seconds
+  options.env = mock_env.get();
+  int counter = 0;
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::DumpStats:1", [&](void* /*arg*/) {
+        counter++;
+      });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  Reopen(options);
+  ASSERT_EQ(5, dbfull()->GetDBOptions().stats_dump_period_sec);
+  dbfull()->TEST_WaitForTimedTaskRun([&] { mock_env->set_current_time(5); });
+  ASSERT_GE(counter, 1);
+
+  // Test cacel job through SetOptions
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_dump_period_sec", "0"}}));
+  int old_val = counter;
+  env_->SleepForMicroseconds(10000000);
+  ASSERT_EQ(counter, old_val);
+  Close();
+}
+
 static void assert_candidate_files_empty(DBImpl* dbfull, const bool empty) {
   dbfull->TEST_LockMutex();
   JobContext job_context(0);
   dbfull->FindObsoleteFiles(&job_context, false);
   ASSERT_EQ(empty, job_context.full_scan_candidate_files.empty());
-  job_context.Clean();
   dbfull->TEST_UnlockMutex();
+  if (job_context.HaveSomethingToDelete()) {
+    // fulfill the contract of FindObsoleteFiles by calling PurgeObsoleteFiles
+    // afterwards; otherwise the test may hang on shutdown
+    dbfull->PurgeObsoleteFiles(job_context);
+  }
+  job_context.Clean();
 }
 
 TEST_F(DBOptionsTest, DeleteObsoleteFilesPeriodChange) {
@@ -692,6 +725,32 @@ TEST_F(DBOptionsTest, SetFIFOCompactionOptions) {
   ASSERT_LE(NumTableFilesAtLevel(0), 5);
 }
 
+TEST_F(DBOptionsTest, CompactionReadaheadSizeChange) {
+  SpecialEnv env(env_);
+  Options options;
+  options.env = &env;
+
+  options.compaction_readahead_size = 0;
+  options.new_table_reader_for_compaction_inputs = true;
+  options.level0_file_num_compaction_trigger = 2;
+  const std::string kValue(1024, 'v');
+  Reopen(options);
+
+  ASSERT_EQ(0, dbfull()->GetDBOptions().compaction_readahead_size);
+  ASSERT_OK(dbfull()->SetDBOptions({{"compaction_readahead_size", "256"}}));
+  ASSERT_EQ(256, dbfull()->GetDBOptions().compaction_readahead_size);
+  for (int i = 0; i < 1024; i++) {
+    Put(Key(i), kValue);
+  }
+  Flush();
+  for (int i = 0; i < 1024 * 2; i++) {
+    Put(Key(i), kValue);
+  }
+  Flush();
+  dbfull()->TEST_WaitForCompact();
+  ASSERT_EQ(256, env_->compaction_readahead_size_);
+  Close();
+}
 #endif  // ROCKSDB_LITE
 
 }  // namespace rocksdb

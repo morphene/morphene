@@ -51,6 +51,28 @@ public class Options extends RocksObject
     env_ = Env.getDefault();
   }
 
+  /**
+   * Copy constructor for ColumnFamilyOptions.
+   *
+   * NOTE: This does a shallow copy, which means comparator, merge_operator
+   * and other pointers will be cloned!
+   *
+   * @param other The Options to copy.
+   */
+  public Options(Options other) {
+    super(copyOptions(other.nativeHandle_));
+    this.env_ = other.env_;
+    this.memTableConfig_ = other.memTableConfig_;
+    this.tableFormatConfig_ = other.tableFormatConfig_;
+    this.rateLimiter_ = other.rateLimiter_;
+    this.comparator_ = other.comparator_;
+    this.compactionOptionsUniversal_ = other.compactionOptionsUniversal_;
+    this.compactionOptionsFIFO_ = other.compactionOptionsFIFO_;
+    this.compressionOptions_ = other.compressionOptions_;
+    this.rowCache_ = other.rowCache_;
+    this.writeBufferManager_ = other.writeBufferManager_;
+  }
+
   @Override
   public Options setIncreaseParallelism(final int totalThreads) {
     assert(isOwningHandle());
@@ -170,7 +192,7 @@ public class Options extends RocksObject
       final AbstractComparator<? extends AbstractSlice<?>> comparator) {
     assert(isOwningHandle());
     setComparatorHandle(nativeHandle_, comparator.nativeHandle_,
-            comparator instanceof DirectComparator);
+            comparator.getComparatorType().getValue());
     comparator_ = comparator;
     return this;
   }
@@ -703,6 +725,20 @@ public class Options extends RocksObject
   }
 
   @Override
+  public Options setWriteBufferManager(final WriteBufferManager writeBufferManager) {
+    assert(isOwningHandle());
+    setWriteBufferManager(nativeHandle_, writeBufferManager.nativeHandle_);
+    this.writeBufferManager_ = writeBufferManager;
+    return this;
+  }
+
+  @Override
+  public WriteBufferManager writeBufferManager() {
+    assert(isOwningHandle());
+    return this.writeBufferManager_;
+  }
+
+    @Override
   public long dbWriteBufferSize() {
     assert(isOwningHandle());
     return dbWriteBufferSize(nativeHandle_);
@@ -1008,6 +1044,13 @@ public class Options extends RocksObject
     assert(isOwningHandle());
     rateLimiter_ = rateLimiter;
     setRateLimiter(nativeHandle_, rateLimiter.nativeHandle_);
+    return this;
+  }
+
+  @Override
+  public Options setSstFileManager(final SstFileManager sstFileManager) {
+    assert(isOwningHandle());
+    setSstFileManager(nativeHandle_, sstFileManager.nativeHandle_);
     return this;
   }
 
@@ -1548,6 +1591,7 @@ public class Options extends RocksObject
   private native static long newOptions();
   private native static long newOptions(long dbOptHandle,
       long cfOptHandle);
+  private native static long copyOptions(long handle);
   @Override protected final native void disposeInternal(final long handle);
   private native void setEnv(long optHandle, long envHandle);
   private native void prepareForBulkLoad(long handle);
@@ -1566,6 +1610,8 @@ public class Options extends RocksObject
   private native boolean paranoidChecks(long handle);
   private native void setRateLimiter(long handle,
       long rateLimiterHandle);
+  private native void setSstFileManager(final long handle,
+      final long sstFileManagerHandle);
   private native void setLogger(long handle,
       long loggerHandle);
   private native void setInfoLogLevel(long handle, byte logLevel);
@@ -1659,6 +1705,8 @@ public class Options extends RocksObject
   private native boolean adviseRandomOnOpen(long handle);
   private native void setDbWriteBufferSize(final long handle,
       final long dbWriteBufferSize);
+  private native void setWriteBufferManager(final long handle,
+      final long writeBufferManagerHandle);
   private native long dbWriteBufferSize(final long handle);
   private native void setAccessHintOnCompactionStart(final long handle,
       final byte accessHintOnCompactionStart);
@@ -1734,7 +1782,7 @@ public class Options extends RocksObject
       long memtableMemoryBudget);
   private native void setComparatorHandle(long handle, int builtinComparator);
   private native void setComparatorHandle(long optHandle,
-      long comparatorHandle, boolean isDirect);
+      long comparatorHandle, byte comparatorType);
   private native void setMergeOperatorName(
       long handle, String name);
   private native void setMergeOperator(
@@ -1868,6 +1916,7 @@ public class Options extends RocksObject
   private native boolean forceConsistencyChecks(final long handle);
 
   // instance variables
+  // NOTE: If you add new member variables, please update the copy constructor above!
   private Env env_;
   private MemTableConfig memTableConfig_;
   private TableFormatConfig tableFormatConfig_;
@@ -1877,4 +1926,5 @@ public class Options extends RocksObject
   private CompactionOptionsFIFO compactionOptionsFIFO_;
   private CompressionOptions compressionOptions_;
   private Cache rowCache_;
+  private WriteBufferManager writeBufferManager_;
 }

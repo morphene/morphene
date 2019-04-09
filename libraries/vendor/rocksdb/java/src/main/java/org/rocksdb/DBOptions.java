@@ -33,6 +33,23 @@ public class DBOptions
   }
 
   /**
+   * Copy constructor for DBOptions.
+   *
+   * NOTE: This does a shallow copy, which means env, rate_limiter, sst_file_manager,
+   * info_log and other pointers will be cloned!
+   *
+   * @param other The DBOptions to copy.
+   */
+  public DBOptions(DBOptions other) {
+    super(copyDBOptions(other.nativeHandle_));
+    this.env_ = other.env_;
+    this.numShardBits_ = other.numShardBits_;
+    this.rateLimiter_ = other.rateLimiter_;
+    this.rowCache_ = other.rowCache_;
+    this.writeBufferManager_ = other.writeBufferManager_;
+  }
+
+  /**
    * <p>Method to get a options instance by using pre-configured
    * property values. If one or many values are undefined in
    * the context of RocksDB the method will return a null
@@ -159,6 +176,13 @@ public class DBOptions
     assert(isOwningHandle());
     rateLimiter_ = rateLimiter;
     setRateLimiter(nativeHandle_, rateLimiter.nativeHandle_);
+    return this;
+  }
+
+  @Override
+  public DBOptions setSstFileManager(final SstFileManager sstFileManager) {
+    assert(isOwningHandle());
+    setSstFileManager(nativeHandle_, sstFileManager.nativeHandle_);
     return this;
   }
 
@@ -645,6 +669,20 @@ public class DBOptions
   }
 
   @Override
+  public DBOptions setWriteBufferManager(final WriteBufferManager writeBufferManager) {
+    assert(isOwningHandle());
+    setWriteBufferManager(nativeHandle_, writeBufferManager.nativeHandle_);
+    this.writeBufferManager_ = writeBufferManager;
+    return this;
+  }
+
+  @Override
+  public WriteBufferManager writeBufferManager() {
+    assert(isOwningHandle());
+    return this.writeBufferManager_;
+  }
+
+    @Override
   public long dbWriteBufferSize() {
     assert(isOwningHandle());
     return dbWriteBufferSize(nativeHandle_);
@@ -954,6 +992,7 @@ public class DBOptions
       String optString);
 
   private native static long newDBOptions();
+  private native static long copyDBOptions(long handle);
   @Override protected final native void disposeInternal(final long handle);
 
   private native void optimizeForSmallDb(final long handle);
@@ -971,6 +1010,8 @@ public class DBOptions
   private native boolean paranoidChecks(long handle);
   private native void setRateLimiter(long handle,
       long rateLimiterHandle);
+  private native void setSstFileManager(final long handle,
+      final long sstFileManagerHandle);
   private native void setLogger(long handle,
       long loggerHandle);
   private native void setInfoLogLevel(long handle, byte logLevel);
@@ -1061,6 +1102,8 @@ public class DBOptions
   private native boolean adviseRandomOnOpen(long handle);
   private native void setDbWriteBufferSize(final long handle,
       final long dbWriteBufferSize);
+  private native void setWriteBufferManager(final long dbOptionsHandle,
+      final long writeBufferManagerHandle);
   private native long dbWriteBufferSize(final long handle);
   private native void setAccessHintOnCompactionStart(final long handle,
       final byte accessHintOnCompactionStart);
@@ -1127,8 +1170,10 @@ public class DBOptions
   private native boolean avoidFlushDuringShutdown(final long handle);
 
   // instance variables
+  // NOTE: If you add new member variables, please update the copy constructor above!
   private Env env_;
   private int numShardBits_;
   private RateLimiter rateLimiter_;
   private Cache rowCache_;
+  private WriteBufferManager writeBufferManager_;
 }

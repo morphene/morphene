@@ -13,7 +13,6 @@
 #ifndef ROCKSDB_LITE
 #ifdef GFLAGS
 
-#include <gflags/gflags.h>
 #include <inttypes.h>
 #include <vector>
 #include "rocksdb/env.h"
@@ -23,11 +22,12 @@
 #include "table/format.h"
 #include "tools/sst_dump_tool_imp.h"
 #include "util/compression.h"
+#include "util/gflags_compat.h"
 #include "util/stop_watch.h"
 #include "utilities/col_buf_encoder.h"
 #include "utilities/column_aware_encoding_util.h"
 
-using GFLAGS::ParseCommandLineFlags;
+using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 DEFINE_string(encoded_file, "", "file to store encoded data blocks");
 DEFINE_string(decoded_file, "",
               "file to store decoded data blocks after encoding");
@@ -88,7 +88,7 @@ class ColumnAwareEncodingExp {
     EnvOptions env_options;
     if (CompressionTypeSupported(compression_type)) {
       fprintf(stdout, "[%s]\n", FLAGS_compression_type.c_str());
-      unique_ptr<WritableFile> encoded_out_file;
+      std::unique_ptr<WritableFile> encoded_out_file;
 
       std::unique_ptr<Env> env(NewMemEnv(Env::Default()));
       if (!FLAGS_encoded_file.empty()) {
@@ -116,7 +116,7 @@ class ColumnAwareEncodingExp {
       uint64_t encode_time = sw.ElapsedNanosSafe(false /* reset */);
       fprintf(stdout, "Encode time: %" PRIu64 "\n", encode_time);
       if (decode) {
-        unique_ptr<WritableFile> decoded_out_file;
+        std::unique_ptr<WritableFile> decoded_out_file;
         if (!FLAGS_decoded_file.empty()) {
           env->NewWritableFile(FLAGS_decoded_file, &decoded_out_file,
                                env_options);
@@ -169,7 +169,7 @@ int main() {
 }
 #endif  // GFLAGS
 #else
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr, "Not supported in lite mode.\n");
   return 1;
 }
