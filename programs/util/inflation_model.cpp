@@ -9,15 +9,11 @@
 #include <iostream>
 #include <vector>
 
-#define CURATE_OFF      0
-#define VCURATE_OFF     1
-#define CONTENT_OFF     2
-#define VCONTENT_OFF    3
-#define PRODUCER_OFF    4
-#define VPRODUCER_OFF   5
-#define REWARD_TYPES    6
+#define PRODUCER_OFF    1
+#define VPRODUCER_OFF   2
+#define REWARD_TYPES    3
 
-using morphene::protocol::asset;
+using morphene::protocol::legacy_asset;
 using morphene::protocol::share_type;
 using morphene::protocol::calc_percent_reward_per_block;
 using morphene::protocol::calc_percent_reward_per_round;
@@ -30,10 +26,6 @@ Explanation of output
 
 rvec shows total number of MORPH satoshis created since genesis for:
 
-- Curation rewards
-- Vesting rewards balancing curation rewards
-- Content rewards
-- Vesting rewards balancing content rewards
 - Producer rewards
 - Vesting rewards balancing producer rewards
 
@@ -67,23 +59,13 @@ int main( int argc, char** argv, char** envp )
 
    auto block_inflation_model = [&]( uint32_t block_num, share_type& current_supply )
    {
-      uint32_t vesting_factor = (block_num < MORPHENE_START_VESTING_BLOCK) ? 0 : 9;
-
-      share_type curate_reward   = calc_percent_reward_per_block< MORPHENE_CURATE_APR_PERCENT >( current_supply );
-      reward_delta[ CURATE_OFF ] = std::max( curate_reward, MORPHENE_MIN_CURATE_REWARD.amount );
-      reward_delta[ VCURATE_OFF ] = reward_delta[ CURATE_OFF ] * vesting_factor;
-
-      share_type content_reward  = calc_percent_reward_per_block< MORPHENE_CONTENT_APR_PERCENT >( current_supply );
-      reward_delta[ CONTENT_OFF ] = std::max( content_reward, MORPHENE_MIN_CONTENT_REWARD.amount );
-      reward_delta[ VCONTENT_OFF ] = reward_delta[ CONTENT_OFF ] * vesting_factor;
+      uint32_t vesting_factor = 9;
 
       share_type producer_reward = calc_percent_reward_per_block< MORPHENE_PRODUCER_APR_PERCENT >( current_supply );
       reward_delta[ PRODUCER_OFF ] = std::max( producer_reward, MORPHENE_MIN_PRODUCER_REWARD.amount );
       reward_delta[ VPRODUCER_OFF ] = reward_delta[ PRODUCER_OFF ] * vesting_factor;
 
-      current_supply += reward_delta[CURATE_OFF] + reward_delta[VCURATE_OFF] + reward_delta[CONTENT_OFF] + reward_delta[VCONTENT_OFF] + reward_delta[PRODUCER_OFF] + reward_delta[VPRODUCER_OFF];
-      // supply for above is computed by using pre-updated supply for computing all 3 amounts.
-      // supply for below reward types is basically a self-contained event which updates the supply immediately before the next reward type's computation.
+      current_supply += reward_delta[PRODUCER_OFF] + reward_delta[VPRODUCER_OFF];
 
       for( int i=0; i<REWARD_TYPES; i++ )
       {

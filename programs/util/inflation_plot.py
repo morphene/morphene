@@ -13,7 +13,7 @@ from matplotlib.ticker import AutoMinorLocator
 x = []
 y = []
 
-names = ["curate", "content", "producer"]
+names = ["producer"]
 inflections = {}
 markers = []
 
