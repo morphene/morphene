@@ -1473,6 +1473,8 @@ void database::process_funds()
 
    if( cwit.schedule == witness_object::timeshare )
       witness_reward *= wso.timeshare_weight;
+   else if( cwit.schedule == witness_object::miner )
+      witness_reward *= wso.miner_weight;
    else if( cwit.schedule == witness_object::elected )
       witness_reward *= wso.elected_weight;
    else

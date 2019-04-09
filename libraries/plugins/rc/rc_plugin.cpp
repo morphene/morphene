@@ -152,6 +152,23 @@ std::vector< std::pair< int64_t, account_name_type > > dump_all_rc_accounts( con
    return result;
 }
 
+struct get_worker_name_visitor
+{
+   typedef account_name_type result_type;
+
+   template< typename WorkType >
+   account_name_type operator()( const WorkType& work )
+   {   return work.input.worker_account;    }
+};
+
+account_name_type get_worker_name( const pow_work& work )
+{
+   // Even though in both cases the result is work.input.worker_account,
+   // we have to use a visitor because pow_work is a static_variant
+   get_worker_name_visitor vtor;
+   return work.visit( vtor );
+}
+
 struct get_resource_user_visitor
 {
    typedef account_name_type result_type;
@@ -170,6 +187,11 @@ struct get_resource_user_visitor
       for( const auto& account_weight : op.recent_owner_authority.account_auths )
          return account_weight.first;
       return op.account_to_recover;
+   }
+
+   account_name_type operator()( const pow_operation& op )const
+   {
+      return get_worker_name(op.work);
    }
 
    template< typename Op >
@@ -490,23 +512,6 @@ void rc_plugin_impl::on_first_block()
    }
 
    return;
-}
-
-struct get_worker_name_visitor
-{
-   typedef account_name_type result_type;
-
-   template< typename WorkType >
-   account_name_type operator()( const WorkType& work )
-   {   return work.input.worker_account;    }
-};
-
-account_name_type get_worker_name( const pow_work& work )
-{
-   // Even though in both cases the result is work.input.worker_account,
-   // we have to use a visitor because pow_work is a static_variant
-   get_worker_name_visitor vtor;
-   return work.visit( vtor );
 }
 
 //

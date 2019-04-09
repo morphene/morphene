@@ -68,8 +68,8 @@
 #define MORPHENE_NUM_INIT_WITNESSES              1
 #define MORPHENE_INIT_TIME                       (fc::time_point_sec());
 
-#define MORPHENE_MAX_VOTED_WITNESSES             1 /// elected
-#define MORPHENE_MAX_MINER_WITNESSES             19  /// miner
+#define MORPHENE_MAX_VOTED_WITNESSES             19 /// elected
+#define MORPHENE_MAX_MINER_WITNESSES             1  /// miner
 #define MORPHENE_MAX_RUNNER_WITNESSES            1  /// timeshare
 #define MORPHENE_MAX_WITNESSES                   (MORPHENE_MAX_VOTED_WITNESSES+MORPHENE_MAX_MINER_WITNESSES+MORPHENE_MAX_RUNNER_WITNESSES) /// 21 is more than enough
 

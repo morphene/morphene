@@ -199,6 +199,7 @@ struct count_operation_visitor
    void operator()( const recover_account_operation& ) const {}
    void operator()( const reset_account_operation& ) const {}
    void operator()( const set_reset_account_operation& ) const {}
+   void operator()( const pow_operation& ) const {}
 
    // Virtual Ops
    void operator()( const fill_vesting_withdraw_operation& ) const {}
@@ -208,7 +209,6 @@ struct count_operation_visitor
    void operator()( const producer_reward_operation& ) const {}
    void operator()( const clear_null_account_balance_operation& ) const {}
 
-   void operator()( const pow_operation& ) const {}
 };
 
 void count_resources(
