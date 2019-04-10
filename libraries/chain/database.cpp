@@ -1110,7 +1110,7 @@ uint32_t database::get_pow_summary_target()const
    if( dgp.num_pow_witnesses >= 1004 )
       return 0;
 
-   return (0xFB00 - 0x0040 * dgp.num_pow_witnesses) << 0x10;
+   return (0xF000 - 0x0040 * dgp.num_pow_witnesses) << 0x10;
 }
 
 void database::adjust_proxied_witness_votes( const account_object& a,
