@@ -35,33 +35,4 @@ uint64_t approx_sqrt( const uint128_t& x )
    return result;
 }
 
-uint128_t evaluate_reward_curve( const uint128_t& rshares, const protocol::curve_id& curve, const uint128_t& content_constant )
-{
-   uint128_t result = 0;
-
-   switch( curve )
-   {
-      case protocol::quadratic:
-         {
-            uint128_t rshares_plus_s = rshares + content_constant;
-            result = rshares_plus_s * rshares_plus_s - content_constant * content_constant;
-         }
-         break;
-      case protocol::quadratic_curation:
-         {
-            uint128_t two_alpha = content_constant * 2;
-            result = uint128_t( rshares.lo, 0 ) / ( two_alpha + rshares );
-         }
-         break;
-      case protocol::linear:
-         result = rshares;
-         break;
-      case protocol::square_root:
-         result = approx_sqrt( rshares );
-         break;
-   }
-
-   return result;
-}
-
 } } } // morphene::chain::util

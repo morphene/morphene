@@ -29,21 +29,9 @@ share_type calc_percent_reward( share_type current_supply )
 }
 
 template< uint16_t percent >
-inline share_type calc_percent_reward_per_hour( share_type current_supply )
-{
-   return calc_percent_reward< percent, MORPHENE_APR_PERCENT_MULTIPLY_PER_HOUR, MORPHENE_APR_PERCENT_SHIFT_PER_HOUR >( current_supply );
-}
-
-template< uint16_t percent >
 inline share_type calc_percent_reward_per_block( share_type current_supply )
 {
    return calc_percent_reward< percent, MORPHENE_APR_PERCENT_MULTIPLY_PER_BLOCK, MORPHENE_APR_PERCENT_SHIFT_PER_BLOCK >( current_supply );
-}
-
-template< uint16_t percent >
-inline share_type calc_percent_reward_per_round( share_type current_supply )
-{
-   return calc_percent_reward< percent, MORPHENE_APR_PERCENT_MULTIPLY_PER_ROUND, MORPHENE_APR_PERCENT_SHIFT_PER_ROUND >( current_supply );
 }
 
 } }

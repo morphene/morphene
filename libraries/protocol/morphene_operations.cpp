@@ -11,7 +11,7 @@ namespace morphene { namespace protocol {
    void validate_auth_size( const authority& a )
    {
       size_t size = a.account_auths.size() + a.key_auths.size();
-      FC_ASSERT( size <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Authority membership exceeded. Max: 10 Current: ${n}", ("n", size) );
+      FC_ASSERT( size <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Authority membership exceeded. Max: ${m} Current: ${n}", ("m",MORPHENE_MAX_AUTHORITY_MEMBERSHIP)("n", size) );
    }
 
    void account_create_operation::validate() const
@@ -294,34 +294,12 @@ namespace morphene { namespace protocol {
       pow_summary = work.approx_log_32();
    }
 
-   // void equihash_pow::create( const block_id_type& recent_block, const account_name_type& account_name, uint32_t nonce )
-   // {
-   //    input.worker_account = account_name;
-   //    input.prev_block = recent_block;
-   //    input.nonce = nonce;
-
-   //    auto seed = fc::sha256::hash( input );
-   //    proof = fc::equihash::proof::hash( MORPHENE_EQUIHASH_N, MORPHENE_EQUIHASH_K, seed );
-   //    pow_summary = fc::sha256::hash( proof.inputs ).approx_log_32();
-   // }
-
    void pow::validate()const
    {
       validate_account_name( input.worker_account );
       pow tmp; tmp.create( input.prev_block, input.worker_account, input.nonce );
       FC_ASSERT( pow_summary == tmp.pow_summary, "reported work does not match calculated work" );
    }
-
-   // void equihash_pow::validate() const
-   // {
-   //    validate_account_name( input.worker_account );
-   //    auto seed = fc::sha256::hash( input );
-   //    FC_ASSERT( proof.n == MORPHENE_EQUIHASH_N, "proof of work 'n' value is incorrect" );
-   //    FC_ASSERT( proof.k == MORPHENE_EQUIHASH_K, "proof of work 'k' value is incorrect" );
-   //    FC_ASSERT( proof.seed == seed, "proof of work seed does not match expected seed" );
-   //    FC_ASSERT( proof.is_valid(), "proof of work is not a solution", ("block_id", input.prev_block)("worker_account", input.worker_account)("nonce", input.nonce) );
-   //    FC_ASSERT( pow_summary == fc::sha256::hash( proof.inputs ).approx_log_32() );
-   // }
 
    void escrow_transfer_operation::validate()const
    {

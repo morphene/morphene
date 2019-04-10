@@ -1454,7 +1454,7 @@ void database::process_funds()
    int64_t current_inflation_rate = std::max( start_inflation_rate - inflation_rate_adjustment, inflation_rate_floor );
 
    auto new_morph = ( props.current_supply.amount * current_inflation_rate ) / ( int64_t( MORPHENE_100_PERCENT ) * int64_t( MORPHENE_BLOCKS_PER_YEAR ) );
-   auto witness_reward = new_morph; /// 100% of inflation to Witnesses
+   auto witness_reward = std::max(new_morph, MORPHENE_MIN_PRODUCER_REWARD.amount); /// 100% of inflation to Witnesses
 
    const auto& cwit = get_witness( props.current_witness );
    witness_reward *= MORPHENE_MAX_WITNESSES;
@@ -1682,6 +1682,19 @@ void database::init_genesis( uint64_t init_supply )
 
       // Create blockchain accounts
       public_key_type      init_public_key(MORPHENE_INIT_PUBLIC_KEY);
+
+      create< account_object >( [&]( account_object& a )
+      {
+         a.name = MORPHENE_MINER_ACCOUNT;
+      } );
+      create< account_authority_object >( [&]( account_authority_object& auth )
+      {
+         auth.account = MORPHENE_MINER_ACCOUNT;
+         auth.owner.weight_threshold = 1;
+         auth.active.weight_threshold = 1;
+         auth.posting = authority();
+         auth.posting.weight_threshold = 1;
+      });
 
       create< account_object >( [&]( account_object& a )
       {

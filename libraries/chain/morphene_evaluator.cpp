@@ -45,26 +45,6 @@ std::string wstring_to_utf8(const std::wstring& str)
 namespace morphene { namespace chain {
    using fc::uint128_t;
 
-inline void validate_permlink_0_1( const string& permlink )
-{
-   FC_ASSERT( permlink.size() > MORPHENE_MIN_PERMLINK_LENGTH && permlink.size() < MORPHENE_MAX_PERMLINK_LENGTH, "Permlink is not a valid size." );
-
-   for( const auto& c : permlink )
-   {
-      switch( c )
-      {
-         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i':
-         case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r':
-         case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': case '0':
-         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-         case '-':
-            break;
-         default:
-            FC_ASSERT( false, "Invalid permlink character: ${s}", ("s", std::string() + c ) );
-      }
-   }
-}
-
 struct strcmp_equal
 {
    bool operator()( const shared_string& a, const string& b )
@@ -845,7 +825,7 @@ void custom_evaluator::do_apply( const custom_operation& o )
    if( d.is_producing() )
       FC_ASSERT( o.data.size() <= 8192, "custom_operation must be less than 8k" );
 
-   FC_ASSERT( o.required_auths.size() <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Too many auths specified. Max: 10, Current: ${n}", ("n", o.required_auths.size()) );
+   FC_ASSERT( o.required_auths.size() <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Too many auths specified. Max: ${m}, Current: ${n}", ("m",MORPHENE_MAX_AUTHORITY_MEMBERSHIP)("n", o.required_auths.size()) );
 }
 
 void custom_json_evaluator::do_apply( const custom_json_operation& o )
@@ -856,7 +836,7 @@ void custom_json_evaluator::do_apply( const custom_json_operation& o )
       FC_ASSERT( o.json.length() <= 8192, "custom_json_operation json must be less than 8k" );
 
    size_t num_auths = o.required_auths.size() + o.required_posting_auths.size();
-   FC_ASSERT( num_auths <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Too many auths specified. Max: 10, Current: ${n}", ("n", num_auths) );
+   FC_ASSERT( num_auths <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Too many auths specified. Max: ${m}, Current: ${n}", ("m",MORPHENE_MAX_AUTHORITY_MEMBERSHIP)("n", num_auths) );
 
    std::shared_ptr< custom_operation_interpreter > eval = d.get_custom_json_evaluator( o.id );
    if( !eval )

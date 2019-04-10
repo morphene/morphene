@@ -10,14 +10,11 @@
 #include <vector>
 
 #define PRODUCER_OFF    1
-#define VPRODUCER_OFF   2
-#define REWARD_TYPES    3
+#define REWARD_TYPES    2
 
 using morphene::protocol::legacy_asset;
 using morphene::protocol::share_type;
 using morphene::protocol::calc_percent_reward_per_block;
-using morphene::protocol::calc_percent_reward_per_round;
-using morphene::protocol::calc_percent_reward_per_hour;
 
 /*
 Explanation of output
@@ -27,11 +24,9 @@ Explanation of output
 rvec shows total number of MORPH satoshis created since genesis for:
 
 - Producer rewards
-- Vesting rewards balancing producer rewards
 
 b is block number
 s is total supply
-
 
 Some possible sources of inaccuracy, the direction and estimated relative sizes of these effects:
 
@@ -46,11 +41,6 @@ int main( int argc, char** argv, char** envp )
    std::vector< share_type > reward_delta;
    std::vector< share_type > reward_total;
 
-/*
-#define MORPHENE_GENESIS_TIME                    (fc::time_point_sec(1458835200))
-#define MORPHENE_FIRST_CASHOUT_TIME              (fc::time_point_sec(1467590400))  /// July 4th
-*/
-
    for( int i=0; i<REWARD_TYPES; i++ )
    {
       reward_delta.emplace_back();
@@ -59,28 +49,26 @@ int main( int argc, char** argv, char** envp )
 
    auto block_inflation_model = [&]( uint32_t block_num, share_type& current_supply )
    {
-      uint32_t vesting_factor = 9;
+      int64_t start_inflation_rate = int64_t( MORPHENE_INFLATION_RATE_START_PERCENT );
+      int64_t inflation_rate_adjustment = int64_t( block_num / MORPHENE_INFLATION_NARROWING_PERIOD );
+      int64_t inflation_rate_floor = int64_t( MORPHENE_INFLATION_RATE_STOP_PERCENT );
+      int64_t current_inflation_rate = std::max( start_inflation_rate - inflation_rate_adjustment, inflation_rate_floor );
 
-      share_type producer_reward = calc_percent_reward_per_block< MORPHENE_PRODUCER_APR_PERCENT >( current_supply );
-      reward_delta[ PRODUCER_OFF ] = std::max( producer_reward, MORPHENE_MIN_PRODUCER_REWARD.amount );
-      reward_delta[ VPRODUCER_OFF ] = reward_delta[ PRODUCER_OFF ] * vesting_factor;
+      auto new_morph = ( current_supply * current_inflation_rate ) / ( int64_t( MORPHENE_100_PERCENT ) * int64_t( MORPHENE_BLOCKS_PER_YEAR ) );
+      reward_delta[ PRODUCER_OFF ] = std::max(new_morph, MORPHENE_MIN_PRODUCER_REWARD.amount);
 
-      current_supply += reward_delta[PRODUCER_OFF] + reward_delta[VPRODUCER_OFF];
-
-      for( int i=0; i<REWARD_TYPES; i++ )
-      {
-         reward_total[i] += reward_delta[i];
-      }
+      current_supply += reward_delta[PRODUCER_OFF];
+      reward_total[PRODUCER_OFF] += reward_delta[PRODUCER_OFF];
 
       return;
    };
 
-   share_type current_supply = 0;
+   share_type current_supply = MORPHENE_INIT_SUPPLY;
 
-   for( uint32_t b=1; b<10*MORPHENE_BLOCKS_PER_YEAR; b++ )
+   for( uint32_t b=1; b<20*MORPHENE_BLOCKS_PER_YEAR; b++ )
    {
       block_inflation_model( b, current_supply );
-      if( b%1000 == 0 )
+      if( b%1000 == 0 || b==1 )
       {
          fc::mutable_variant_object mvo;
          mvo("rvec", reward_total)("b", b)("s", current_supply);

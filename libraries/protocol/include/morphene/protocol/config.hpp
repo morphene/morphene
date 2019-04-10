@@ -9,51 +9,47 @@
 // This is checked by get_config_check.sh called from Dockerfile
 
 #ifdef IS_TEST_NET
-#define MORPHENE_BLOCKCHAIN_VERSION              ( version(0, 2, 0) )
+#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 2, 0) )
 
-#define MORPHENE_INIT_PRIVATE_KEY                (fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key"))))
-#define MORPHENE_INIT_PUBLIC_KEY_STR             (std::string( morphene::protocol::public_key_type(MORPHENE_INIT_PRIVATE_KEY.get_public_key()) ))
+#define MORPHENE_INIT_PRIVATE_KEY                 (fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key"))))
+#define MORPHENE_INIT_PUBLIC_KEY_STR              (std::string( morphene::protocol::public_key_type(MORPHENE_INIT_PRIVATE_KEY.get_public_key()) ))
 #define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-test"))
-#define MORPHENE_ADDRESS_PREFIX                  "TST"
+#define MORPHENE_ADDRESS_PREFIX                   "TST"
 
-#define MORPHENE_GENESIS_TIME                    (fc::time_point_sec(1553990399))
+#define MORPHENE_MIN_ACCOUNT_CREATION_FEE         0
+#define MORPHENE_MAX_ACCOUNT_CREATION_FEE         int64_t(1000000000)
 
-#define MORPHENE_MIN_ACCOUNT_CREATION_FEE          0
-#define MORPHENE_MAX_ACCOUNT_CREATION_FEE          int64_t(1000000000)
+#define MORPHENE_OWNER_UPDATE_LIMIT               fc::seconds(0)
 
-#define MORPHENE_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
-#define MORPHENE_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
-#define MORPHENE_OWNER_UPDATE_LIMIT                          fc::seconds(0)
-#define MORPHENE_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
-
-#define MORPHENE_INIT_SUPPLY                     (int64_t( 1000 ) * int64_t( 1000000 ) * int64_t( 1000 ))
+#define MORPHENE_INIT_SUPPLY                      (int64_t( 10000000 ) * int64_t( 1000 ))
 #define MORPHENE_RECENT_CLAIMS									  (fc::uint128_t(uint64_t(0ull)))
 
 /// Allows to limit number of total produced blocks.
-#define TESTNET_BLOCK_LIMIT                   (3000000)
+#define TESTNET_BLOCK_LIMIT                   		(3000000)
 
 #else // IS LIVE Morphene NETWORK
 
-#define MORPHENE_BLOCKCHAIN_VERSION              ( version(0, 1, 0) )
+#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 0) )
 
-#define MORPHENE_INIT_PUBLIC_KEY_STR             "MPH7rLx8tBP1cxc1tqjfw7GEExeFFyyfZPfhKz68dLXs4PSZTxNwZ"
-#define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-main"))
-#define MORPHENE_ADDRESS_PREFIX                  "MPH"
+#define MORPHENE_INIT_PUBLIC_KEY_STR              "MPH7rLx8tBP1cxc1tqjfw7GEExeFFyyfZPfhKz68dLXs4PSZTxNwZ"
+#define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live"))
+#define MORPHENE_ADDRESS_PREFIX                   "MPH"
 
-#define MORPHENE_GENESIS_TIME                    (fc::time_point_sec(1553990399))
+#define MORPHENE_MIN_ACCOUNT_CREATION_FEE         1
+#define MORPHENE_MAX_ACCOUNT_CREATION_FEE         int64_t(1000000000)
 
-#define MORPHENE_MIN_ACCOUNT_CREATION_FEE           1
-#define MORPHENE_MAX_ACCOUNT_CREATION_FEE           int64_t(1000000000)
+#define MORPHENE_OWNER_UPDATE_LIMIT               fc::minutes(60)
 
-#define MORPHENE_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
-#define MORPHENE_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
-#define MORPHENE_OWNER_UPDATE_LIMIT                          fc::minutes(60)
-#define MORPHENE_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 3186477
-
-#define MORPHENE_INIT_SUPPLY                     int64_t(0)
+#define MORPHENE_INIT_SUPPLY                      int64_t(0)
 #define MORPHENE_RECENT_CLAIMS									  (fc::uint128_t(uint64_t(1000000000000ull)))
 
 #endif
+
+#define MORPHENE_GENESIS_TIME                     (fc::time_point_sec(1553990399))
+
+#define MORPHENE_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(30)
+#define MORPHENE_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
+#define MORPHENE_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
 
 #define VESTS_SYMBOL  (morphene::protocol::asset_symbol_type::from_asset_num( MORPHENE_ASSET_NUM_VESTS ) )
 #define MORPH_SYMBOL  (morphene::protocol::asset_symbol_type::from_asset_num( MORPHENE_ASSET_NUM_MORPH ) )
@@ -87,70 +83,34 @@
 #define MORPHENE_100_PERCENT                     10000
 #define MORPHENE_1_PERCENT                       (MORPHENE_100_PERCENT/100)
 
-#define MORPHENE_INFLATION_RATE_START_PERCENT    (978) // Fixes block 7,000,000 to 9.5%
-#define MORPHENE_INFLATION_RATE_STOP_PERCENT     (95) // 0.95%
-#define MORPHENE_INFLATION_NARROWING_PERIOD      (250000) // Narrow 0.01% every 250k blocks
+#define MORPHENE_INFLATION_RATE_START_PERCENT    (4950) // 49.50%
+#define MORPHENE_INFLATION_RATE_STOP_PERCENT     (95)  // 0.95%
+#define MORPHENE_INFLATION_NARROWING_PERIOD      (21000) // Narrow 0.01% every 21k blocks
 
 #define MORPHENE_MAX_RATION_DECAY_RATE           (1000000)
-
-#define MORPHENE_BANDWIDTH_AVERAGE_WINDOW_SECONDS (60*60*24*7) ///< 1 week
-#define MORPHENE_BANDWIDTH_PRECISION             (uint64_t(1000000)) ///< 1 million
 
 #define MORPHENE_CREATE_ACCOUNT_WITH_MORPHENE_MODIFIER 30
 #define MORPHENE_CREATE_ACCOUNT_DELEGATION_RATIO    5
 #define MORPHENE_CREATE_ACCOUNT_DELEGATION_TIME     fc::days(30)
 
-#define MORPHENE_MIN_PRODUCER_REWARD             legacy_asset( 1000, MORPH_SYMBOL )
-#define MORPHENE_MIN_POW_REWARD									 MORPHENE_MIN_PRODUCER_REWARD
-
-#define MORPHENE_EQUIHASH_N                      140
-#define MORPHENE_EQUIHASH_K                      6
-
-#define MORPHENE_ACTIVE_CHALLENGE_FEE            legacy_asset( 2000, MORPH_SYMBOL )
-#define MORPHENE_OWNER_CHALLENGE_FEE             legacy_asset( 30000, MORPH_SYMBOL )
-#define MORPHENE_ACTIVE_CHALLENGE_COOLDOWN       fc::days(1)
-#define MORPHENE_OWNER_CHALLENGE_COOLDOWN        fc::days(1)
-
-#define MORPHENE_CONTENT_CONSTANT                (uint128_t(uint64_t(2000000000000ll)))
-// note, if redefining these constants make sure calculate_claims doesn't overflow
+#define MORPHENE_MIN_PRODUCER_REWARD             legacy_asset( 1, MORPH_SYMBOL )
 
 // 5ccc e802 de5f
 // int(expm1( log1p( 1 ) / BLOCKS_PER_YEAR ) * 2**MORPHENE_APR_PERCENT_SHIFT_PER_BLOCK / 100000 + 0.5)
 // we use 100000 here instead of 10000 because we end up creating an additional 9x for vesting
 #define MORPHENE_APR_PERCENT_MULTIPLY_PER_BLOCK          ( (uint64_t( 0x5ccc ) << 0x20) \
-                                                        | (uint64_t( 0xe802 ) << 0x10) \
-                                                        | (uint64_t( 0xde5f )        ) \
-                                                        )
+                                                         | (uint64_t( 0xe802 ) << 0x10) \
+                                                         | (uint64_t( 0xde5f )        ) \
+                                                         )
 // chosen to be the maximal value such that MORPHENE_APR_PERCENT_MULTIPLY_PER_BLOCK * 2**64 * 100000 < 2**128
 #define MORPHENE_APR_PERCENT_SHIFT_PER_BLOCK             87
 
-#define MORPHENE_APR_PERCENT_MULTIPLY_PER_ROUND          ( (uint64_t( 0x79cc ) << 0x20 ) \
-                                                        | (uint64_t( 0xf5c7 ) << 0x10 ) \
-                                                        | (uint64_t( 0x3480 )         ) \
-                                                        )
-
-#define MORPHENE_APR_PERCENT_SHIFT_PER_ROUND             83
-
-// We have different constants for hourly rewards
-// i.e. hex(int(math.expm1( math.log1p( 1 ) / HOURS_PER_YEAR ) * 2**MORPHENE_APR_PERCENT_SHIFT_PER_HOUR / 100000 + 0.5))
-#define MORPHENE_APR_PERCENT_MULTIPLY_PER_HOUR           ( (uint64_t( 0x6cc1 ) << 0x20) \
-                                                        | (uint64_t( 0x39a1 ) << 0x10) \
-                                                        | (uint64_t( 0x5cbd )        ) \
-                                                        )
-
-// chosen to be the maximal value such that MORPHENE_APR_PERCENT_MULTIPLY_PER_HOUR * 2**64 * 100000 < 2**128
-#define MORPHENE_APR_PERCENT_SHIFT_PER_HOUR              77
-
 // These constants add up to GRAPHENE_100_PERCENT.  Each GRAPHENE_1_PERCENT is equivalent to 1% per year APY
-// *including the corresponding 9x vesting rewards*
-#define MORPHENE_PRODUCER_APR_PERCENT            9000
-#define MORPHENE_POW_APR_PERCENT                 1000
+#define MORPHENE_PRODUCER_APR_PERCENT            10000
 
-#define MORPHENE_MIN_ACCOUNT_NAME_LENGTH          3
+#define MORPHENE_MIN_ACCOUNT_NAME_LENGTH         3
 #define MORPHENE_MAX_ACCOUNT_NAME_LENGTH         16
 
-#define MORPHENE_MIN_PERMLINK_LENGTH             0
-#define MORPHENE_MAX_PERMLINK_LENGTH             256
 #define MORPHENE_MAX_WITNESS_URL_LENGTH          2048
 
 #define MORPHENE_MAX_SHARE_SUPPLY                int64_t(1000000000000000ll)
@@ -172,12 +132,8 @@
 #define MORPHENE_MAX_UNDO_HISTORY                10000
 
 #define MORPHENE_MIN_TRANSACTION_EXPIRATION_LIMIT (MORPHENE_BLOCK_INTERVAL * 5) // 5 transactions per block
-#define MORPHENE_BLOCKCHAIN_PRECISION            uint64_t( 1000 )
 
-#define MORPHENE_BLOCKCHAIN_PRECISION_DIGITS     3
-#define MORPHENE_MAX_INSTANCE_ID                 (uint64_t(-1)>>16)
-/** NOTE: making this a power of 2 (say 2^15) would greatly accelerate fee calcs */
-#define MORPHENE_MAX_AUTHORITY_MEMBERSHIP        40
+#define MORPHENE_MAX_AUTHORITY_MEMBERSHIP        10
 #define MORPHENE_MAX_ASSET_WHITELIST_AUTHORITIES 10
 #define MORPHENE_MAX_URL_LENGTH                  127
 
@@ -212,14 +168,16 @@
 
 // 347321 corresponds to a 5-day halflife
 #define MORPHENE_DEFAULT_ACCOUNT_SUBSIDY_DECAY  (347321)
-// Default rate is 0.5 accounts per block
-#define MORPHENE_DEFAULT_ACCOUNT_SUBSIDY_BUDGET (797)
+// Default rate is 1 account per block
+#define MORPHENE_DEFAULT_ACCOUNT_SUBSIDY_BUDGET (1)
 #define MORPHENE_DECAY_BACKSTOP_PERCENT         (90 * MORPHENE_1_PERCENT)
 
 /**
  *  Reserved Account IDs with special meaning
  */
 ///@{
+/// Represents the current witnesses
+#define MORPHENE_MINER_ACCOUNT                   "miners"
 /// Represents the canonical account with NO authority (nobody can access funds in null account)
 #define MORPHENE_NULL_ACCOUNT                    "null"
 /// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)

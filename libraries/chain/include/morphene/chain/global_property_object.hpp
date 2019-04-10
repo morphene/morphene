@@ -88,8 +88,6 @@ namespace morphene { namespace chain {
 
          uint32_t delegation_return_period = MORPHENE_DELEGATION_RETURN_PERIOD;
 
-         uint64_t reverse_auction_seconds = 0;
-
          int64_t available_account_subsidies = 0;
    };
 
@@ -121,7 +119,6 @@ FC_REFLECT( morphene::chain::dynamic_global_property_object,
              (participation_count)
              (last_irreversible_block_num)
              (delegation_return_period)
-             (reverse_auction_seconds)
              (available_account_subsidies)
           )
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::dynamic_global_property_object, morphene::chain::dynamic_global_property_index )
