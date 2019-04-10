@@ -99,6 +99,24 @@ struct get_impacted_account_visitor
       _impacted.insert( op.proxy );
    }
 
+   struct pow_impacted_visitor
+   {
+      pow_impacted_visitor(){}
+
+      typedef const account_name_type& result_type;
+
+      template< typename WorkType >
+      result_type operator()( const WorkType& work )const
+      {
+         return work.input.worker_account;
+      }
+   };
+
+   void operator()( const pow_operation& op )
+   {
+      _impacted.insert( op.work.visit( pow_impacted_visitor() ) );
+   }
+
    void operator()( const request_account_recovery_operation& op )
    {
       _impacted.insert( op.account_to_recover );

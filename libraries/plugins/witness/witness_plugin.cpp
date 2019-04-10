@@ -623,19 +623,19 @@ void witness_plugin::start_mining(
     auto head_block_time = b.block.timestamp;
     auto block_id = b.block.id();
 
-    fc::thread* mainthread = &fc::thread::current();
+    // fc::thread* mainthread = &fc::thread::current();
 
     my->_total_hashes = 0;
     my->_hash_start_time = fc::time_point::now();
 
-    // auto stop = head_block_time + fc::seconds( MORPHENE_BLOCK_INTERVAL * 3 );
+    auto stop = head_block_time + fc::seconds( MORPHENE_BLOCK_INTERVAL * 3 );
 
     auto& db = my->_db;
 
     uint32_t thread_num = 0;
     uint32_t num_threads = my->_mining_threads;
     uint32_t target = db.get_pow_summary_target();
-    const auto& acct_idx  = db.get_index< chain::account_index >().indices().get< chain::by_name >();
+    const auto& acct_idx  = db.get_index< account_index, by_name >();
     auto acct_it = acct_idx.find( miner );
     bool has_account = (acct_it != acct_idx.end());
     for( auto& t : my->_thread_pool )
@@ -651,20 +651,21 @@ void witness_plugin::start_mining(
           while( true )
           {
              //  if( ((work.input.nonce/num_threads) % 1000) == 0 ) idump((work.input.nonce));
-             // if( fc::time_point::now() > stop )
-             // {
-             //    // ilog( "stop mining due to time out, nonce: ${n}", ("n",work.input.nonce) );
-             //    return;
-             // }
-             // if( my->_head_block_num != head_block_num )
-             // {
-             //    // wlog( "stop mining due new block arrival, nonce: ${n}", ("n",work.input.nonce));
-             //    return;
-             // }
+             if( fc::time_point::now() > stop )
+             {
+                // ilog( "stop mining due to time out, nonce: ${n}", ("n",work.input.nonce) );
+                return;
+             }
+             if( my->_head_block_num != head_block_num )
+             {
+                // wlog( "stop mining due new block arrival, nonce: ${n}", ("n",work.input.nonce));
+                return;
+             }
              ++my->_total_hashes;
 
              work.input.nonce += num_threads;
              work.create( block_id, miner, work.input.nonce );
+             // ilog("PowSummary: ${s}, Target: ${t}, VALID? ${v}", ("s",work.pow_summary)("t",target)("v",work.pow_summary < target));
              if( work.pow_summary < target )
              {
                 ++my->_head_block_num; /// signal other workers to stop
@@ -672,25 +673,27 @@ void witness_plugin::start_mining(
                 chain::signed_transaction trx;
                 op.work = work;
                 if( !has_account )
-                   op.new_owner_key = pub;
+                  op.new_owner_key = pub;
                 trx.operations.push_back(op);
                 trx.ref_block_num = head_block_num;
                 trx.ref_block_prefix = work.input.prev_block._hash[1];
                 trx.set_expiration( head_block_time + MORPHENE_MAX_TIME_UNTIL_EXPIRATION );
                 trx.sign( pk, MORPHENE_CHAIN_ID, fc::ecc::fc_canonical );
-                mainthread->async( [this,miner,trx]()
+                // TODO: Remove this or fix it; buggy
+                // mainthread->async( [this,miner,trx]()
+                // {
+                try
                 {
-                   try
-                   {
-                      appbase::app().get_plugin< morphene::plugins::chain::chain_plugin >().db().push_transaction( trx );
-                      ilog( "Broadcasting Proof of Work for ${miner}", ("miner",miner) );
-                      appbase::app().get_plugin< morphene::plugins::p2p::p2p_plugin >().broadcast_transaction( trx );
-                   }
-                   catch( const fc::exception& e )
-                   {
-                      wdump((e.to_detail_string()));
-                   }
-                } );
+                  ilog("Pushing proof of work TX to chain database");
+                  appbase::app().get_plugin< morphene::plugins::chain::chain_plugin >().db().push_transaction( trx );
+                  ilog( "Broadcasting Proof of Work for ${miner}", ("miner",miner) );
+                  appbase::app().get_plugin< morphene::plugins::p2p::p2p_plugin >().broadcast_transaction( trx );
+                }
+                catch( const fc::exception& e )
+                {
+                  wdump((e.to_detail_string()));
+                }
+                // } );
                 return;
              }
           }

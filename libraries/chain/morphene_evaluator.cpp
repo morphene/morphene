@@ -978,8 +978,7 @@ void pow_evaluator::do_apply( const pow_operation& o )
    /// pay the witness that includes this POW
    legacy_asset inc_reward = db.get_pow_reward();
    db.adjust_supply( inc_reward, true );
-   const auto& inc_witness = db.get_account( dgp.current_witness );
-   db.create_vesting( inc_witness, inc_reward );
+   db.create_vesting( db.get_account( worker_account ), inc_reward );
 }
 
 void claim_account_evaluator::do_apply( const claim_account_operation& o )

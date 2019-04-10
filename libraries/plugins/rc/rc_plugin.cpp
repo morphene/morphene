@@ -191,7 +191,8 @@ struct get_resource_user_visitor
 
    account_name_type operator()( const pow_operation& op )const
    {
-      return get_worker_name(op.work);
+      // TODO: Change this to a virtual op?
+      return MORPHENE_INIT_WITNESS_NAME;
    }
 
    template< typename Op >

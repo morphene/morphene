@@ -1104,25 +1104,13 @@ legacy_asset database::create_vesting( const account_object& to_account, legacy_
    return create_vesting2( *this, to_account, liquid, []( legacy_asset vests_created ) {} );
 }
 
-fc::sha256 database::get_pow_target()const
-{
-   const auto& dgp = get_dynamic_global_properties();
-   fc::sha256 target;
-   target._hash[0] = -1;
-   target._hash[1] = -1;
-   target._hash[2] = -1;
-   target._hash[3] = -1;
-   target = target >> ((dgp.num_pow_witnesses/4)+4);
-   return target;
-}
-
 uint32_t database::get_pow_summary_target()const
 {
    const dynamic_global_property_object& dgp = get_dynamic_global_properties();
    if( dgp.num_pow_witnesses >= 1004 )
       return 0;
 
-   return (0xFC00 - 0x0040 * dgp.num_pow_witnesses) << 0x10;
+   return (0xFE00 - 0x0040 * dgp.num_pow_witnesses) << 0x10;
 }
 
 void database::adjust_proxied_witness_votes( const account_object& a,
@@ -1527,7 +1515,7 @@ legacy_asset database::get_pow_reward()const
 
 #ifndef IS_TEST_NET
    /// 0 block rewards until at least MORPHENE_MAX_WITNESSES have produced a POW
-   if( props.num_pow_witnesses < MORPHENE_MAX_WITNESSES && props.head_block_number < MORPHENE_START_VESTING_BLOCK )
+   if( props.num_pow_witnesses < MORPHENE_MAX_WITNESSES )
       return legacy_asset( 0, MORPH_SYMBOL );
 #endif
 
