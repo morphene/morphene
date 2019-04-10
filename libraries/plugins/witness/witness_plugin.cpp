@@ -684,14 +684,13 @@ void witness_plugin::start_mining(
                 // {
                 try
                 {
-                  ilog("Pushing proof of work TX to chain database");
                   appbase::app().get_plugin< morphene::plugins::chain::chain_plugin >().db().push_transaction( trx );
-                  ilog( "Broadcasting Proof of Work for ${miner}", ("miner",miner) );
+                  ilog( "Broadcasting POW for ${miner}", ("miner",miner) );
                   appbase::app().get_plugin< morphene::plugins::p2p::p2p_plugin >().broadcast_transaction( trx );
                 }
                 catch( const fc::exception& e )
                 {
-                  wdump((e.to_detail_string()));
+                  // wdump((e.to_detail_string()));
                 }
                 // } );
                 return;

@@ -103,7 +103,6 @@
 #define MORPHENE_MIN_PRODUCER_REWARD             legacy_asset( 1000, MORPH_SYMBOL )
 #define MORPHENE_MIN_POW_REWARD									 MORPHENE_MIN_PRODUCER_REWARD
 
-#define MORPHENE_MINING_REWARD                   asset( 1000, STEEM_SYMBOL )
 #define MORPHENE_EQUIHASH_N                      140
 #define MORPHENE_EQUIHASH_K                      6
 
