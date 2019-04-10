@@ -3,7 +3,7 @@
 Morphene is a Delegated Proof of Stake blockchain that uses a "Proof of Brain" social consensus algorithm for token allocation.
 
   - Currency symbol MORPH.
-  - 10% APR inflation narrowing to 1% APR over 20 years.
+  - 49.5% APR inflation narrowing to 0.95% APR over 10 years.
   - 100% of inflation to block producers.
 
 # No Support & No Warranty
