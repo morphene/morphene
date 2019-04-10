@@ -9,18 +9,6 @@ import xml.etree.ElementTree as etree
 other_issues = []
 
 def process_node(path, node):
-    """
-    if node.tag == "TestCase":
-        if node.attrib.get("result", "UNKNOWN") != "passed":
-            failset.add(node)
-        return
-    if node.tag in ["TestResult", "TestSuite"]:
-        for child in node:
-            cpath = path+"/"+child.attrib["name"]
-            process_node(cpath, child)
-        return
-    """
-    #print("unknown node", node.tag)
     print(node.tag)
     return
 
@@ -52,7 +40,7 @@ for k, v in name2members_doxygen.items():
 #with open("stuff/member_enumerator.out", "r") as f:
 #    name2members_fc = json.load(f)
 
-# scan for FC_REFLECT( graphene::... in all cpp,hpp files under libraries/ programs/ tests/
+# scan for FC_REFLECT( graphene::... in all cpp,hpp files under libraries/ programs/
 
 re_reflect = re.compile(r"""
 FC_REFLECT\s*[(]
@@ -79,7 +67,7 @@ name2members_re = {}
 
 for root, dirs, files in os.walk("."):
     if root == ".":
-        dirs[:] = ["libraries", "programs", "tests"]
+        dirs[:] = ["libraries", "programs"]
     for filename in files:
         if not (filename.endswith(".cpp") or filename.endswith(".hpp")):
             continue

@@ -61,7 +61,6 @@ int main( int argc, char** argv, char** envp )
 
    schemas.push_back( get_schema_for_type< mystruct >() );
    schemas.push_back( get_schema_for_type< morphene::chain::account_object >() );
-   schemas.push_back( get_schema_for_type< morphene::chain::comment_object >() );
    add_dependent_schemas( schemas );
 
    for( const std::shared_ptr< abstract_schema >& s : schemas )
