@@ -1,8 +1,6 @@
 #include <morphene/plugins/account_history_api/account_history_api_plugin.hpp>
 #include <morphene/plugins/account_history_api/account_history_api.hpp>
 
-#include <morphene/plugins/account_history_rocksdb/account_history_rocksdb_plugin.hpp>
-
 namespace morphene { namespace plugins { namespace account_history {
 
 namespace detail {
@@ -119,92 +117,19 @@ DEFINE_API_IMPL( account_history_api_chainbase_impl, enum_virtual_ops )
    FC_ASSERT( false, "This API is not supported for account history backed by Chainbase" );
 }
 
-class account_history_api_rocksdb_impl : public abstract_account_history_api_impl
-{
-   public:
-      account_history_api_rocksdb_impl() :
-         abstract_account_history_api_impl(), _dataSource( appbase::app().get_plugin< morphene::plugins::account_history_rocksdb::account_history_rocksdb_plugin >() ) {}
-      ~account_history_api_rocksdb_impl() {}
-
-      get_ops_in_block_return get_ops_in_block( const get_ops_in_block_args& ) override;
-      get_transaction_return get_transaction( const get_transaction_args& ) override;
-      get_account_history_return get_account_history( const get_account_history_args& ) override;
-      enum_virtual_ops_return enum_virtual_ops( const enum_virtual_ops_args& ) override;
-
-      const account_history_rocksdb::account_history_rocksdb_plugin& _dataSource;
-};
-
-DEFINE_API_IMPL( account_history_api_rocksdb_impl, get_ops_in_block )
-{
-   get_ops_in_block_return result;
-   _dataSource.find_operations_by_block(args.block_num,
-      [&result, &args](const account_history_rocksdb::rocksdb_operation_object& op)
-      {
-         api_operation_object temp(op);
-         if( !args.only_virtual || is_virtual_operation( temp.op ) )
-            result.ops.emplace(std::move(temp));
-      }
-   );
-   return result;
-}
-
-DEFINE_API_IMPL( account_history_api_rocksdb_impl, get_account_history )
-{
-   FC_ASSERT( args.limit <= 10000, "limit of ${l} is greater than maxmimum allowed", ("l",args.limit) );
-   FC_ASSERT( args.start >= args.limit, "start must be greater than limit" );
-
-   get_account_history_return result;
-
-   _dataSource.find_account_history_data(args.account, args.start, args.limit,
-      [&result](unsigned int sequence, const account_history_rocksdb::rocksdb_operation_object& op)
-      {
-         result.history[sequence] = api_operation_object( op );
-      });
-
-   return result;
-}
-
-DEFINE_API_IMPL( account_history_api_rocksdb_impl, get_transaction )
-{
-   FC_ASSERT( false, "This API is not supported for account history backed by RocksDB" );
-}
-
-DEFINE_API_IMPL( account_history_api_rocksdb_impl, enum_virtual_ops)
-{
-   enum_virtual_ops_return result;
-
-   result.next_block_range_begin = _dataSource.enum_operations_from_block_range(args.block_range_begin,
-      args.block_range_end,
-      [&result](const account_history_rocksdb::rocksdb_operation_object& op)
-      {
-         result.ops.emplace_back(api_operation_object(op));
-      }
-   );
-
-   return result;
-}
-
 } // detail
 
 account_history_api::account_history_api()
 {
    auto ah_cb = appbase::app().find_plugin< morphene::plugins::account_history::account_history_plugin >();
-   auto ah_rocks = appbase::app().find_plugin< morphene::plugins::account_history_rocksdb::account_history_rocksdb_plugin >();
 
-   if( ah_rocks != nullptr )
-   {
-      if( ah_cb != nullptr )
-         wlog( "account_history and account_history_rocksdb plugins are both enabled. account_history_api will query from account_history_rocksdb" );
-
-      my = std::make_unique< detail::account_history_api_rocksdb_impl >();
-   }
-   else if( ah_cb != nullptr )
+   if( ah_cb != nullptr )
    {
       my = std::make_unique< detail::account_history_api_chainbase_impl >();
    }
    else
    {
-      FC_ASSERT( false, "Account History API only works if account_history or account_history_rocksdb plugins are enabled" );
+      FC_ASSERT( false, "Account History API only works if account_history plugin is enabled" );
    }
 
    JSON_RPC_REGISTER_API( MORPHENE_ACCOUNT_HISTORY_API_PLUGIN_NAME );
