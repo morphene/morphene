@@ -131,6 +131,21 @@ class wallet_api
        */
       database_api::api_account_object get_account( string account_name ) const;
 
+      /** Returns information about the given auction
+       *
+       * @param permlink the permlink for the auction to retrieve
+       * @returns the auction object stored in the blockchain
+       */
+      database_api::api_auction_object get_auction( string permlink ) const;
+
+      /** Returns auctions by status
+       *
+       * @param status the status of the auctions
+       * @param limit the maximum number of auctions to return
+       * @returns the auction object stored in the blockchain
+       */
+      vector< database_api::api_auction_object > get_auctions_by_status( string status, uint32_t limit ) const;
+
       /** Returns the current wallet filename.
        *
        * This is the filename that will be used when automatically saving the wallet.
@@ -907,6 +922,9 @@ FC_API( morphene::wallet::wallet_api,
         (sign_transaction)
 
         (get_active_witnesses)
+
+        (get_auction)
+        (get_auctions_by_status)
       )
 
 FC_REFLECT( morphene::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )

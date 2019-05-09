@@ -48,6 +48,8 @@ struct remote_node_api
    vector< account_history::api_operation_object > get_account_history( account_name_type, uint64_t, uint32_t );
    void broadcast_transaction( database_api::signed_transaction );
    database_api::broadcast_transaction_synchronous_return broadcast_transaction_synchronous( database_api::signed_transaction );
+   database_api::api_auction_object get_auction( string );
+   vector< database_api::api_auction_object > get_auctions_by_status( string, uint32_t );
 };
 
 } }
@@ -76,4 +78,6 @@ FC_API( morphene::wallet::remote_node_api,
         (get_account_history)
         (broadcast_transaction)
         (broadcast_transaction_synchronous)
+        (get_auction)
+        (get_auctions_by_status)
       )

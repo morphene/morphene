@@ -119,4 +119,14 @@ database_api::broadcast_transaction_synchronous_return remote_node_api::broadcas
    FC_ASSERT( false );
 }
 
+database_api::api_auction_object remote_node_api::get_auction( string )
+{
+   FC_ASSERT( false );
+}
+
+vector< database_api::api_auction_object > remote_node_api::get_auctions_by_status( string, uint32_t )
+{
+   FC_ASSERT( false );
+}
+
 } }

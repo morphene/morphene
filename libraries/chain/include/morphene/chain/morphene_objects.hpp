@@ -106,7 +106,7 @@ namespace morphene { namespace chain {
    typedef multi_index_container<
       auction_object,
       indexed_by<
-         ordered_unique< tag< by_id >, member< auction_object, create_auction_id_type, &auction_object::id > >,
+         ordered_unique< tag< by_id >, member< auction_object, auction_id_type, &auction_object::id > >,
          ordered_unique< tag< by_permlink >, member< auction_object, string, &auction_object::permlink > >,
          ordered_non_unique< tag< by_status >, member< auction_object, string, &auction_object::status > >
       >,

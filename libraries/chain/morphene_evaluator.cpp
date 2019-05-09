@@ -1375,6 +1375,7 @@ void delete_auction_evaluator::do_apply ( const delete_auction_operation& op )
    ilog("delete_auction_operation eval");
    auto auction = _db.find< auction_object, by_permlink >( op.permlink );
    FC_ASSERT(auction != nullptr, "Unable to find auction with permlink: ${p}", ("p",op.permlink));
+   _db.remove( *auction );
 }
 
 } } // morphene::chain

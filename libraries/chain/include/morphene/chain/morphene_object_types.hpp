@@ -99,7 +99,7 @@ typedef oid< escrow_object                          > escrow_id_type;
 typedef oid< block_stats_object                     > block_stats_id_type;
 typedef oid< vesting_delegation_object              > vesting_delegation_id_type;
 typedef oid< vesting_delegation_expiration_object   > vesting_delegation_expiration_id_type;
-typedef oid< auction_object                  > create_auction_id_type;
+typedef oid< auction_object                         > auction_id_type;
 
 enum bandwidth_type
 {

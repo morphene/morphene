@@ -30,6 +30,8 @@ DEFINE_API_ARGS( get_witnesses,                          vector< variant >,   ve
 DEFINE_API_ARGS( get_witness_by_account,                 vector< variant >,   optional< api_witness_object > )
 DEFINE_API_ARGS( get_witness_count,                      vector< variant >,   uint64_t )
 DEFINE_API_ARGS( broadcast_transaction,                  vector< variant >,   json_rpc::void_type )
+DEFINE_API_ARGS( get_auction,                            vector< variant >,   api_auction_object )
+DEFINE_API_ARGS( get_auctions_by_status,                 vector< variant >,   vector< api_auction_object > )
 
 typedef vector< variant > get_account_history_args;
 
@@ -152,6 +154,8 @@ class database_api
          (get_witness_count)
          (broadcast_transaction)
          (broadcast_transaction_synchronous)
+         (get_auction)
+         (get_auctions_by_status)
       )
 
    private:

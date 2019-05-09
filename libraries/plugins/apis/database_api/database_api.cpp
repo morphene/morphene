@@ -77,6 +77,8 @@ class database_api_impl
          (get_witness_count)
          (broadcast_transaction)
          (broadcast_transaction_synchronous)
+         (get_auction)
+         (get_auctions_by_status)
       )
 
       template< typename ResultType >
@@ -1159,6 +1161,28 @@ DEFINE_API_IMPL( database_api_impl, broadcast_transaction_synchronous )
    return p.get_future().get();
 }
 
+DEFINE_API_IMPL( database_api_impl, get_auction )
+{
+   auto result = _db.get< chain::auction_object, chain::by_permlink >( args[0].as< string >() );
+   return result;
+}
+
+DEFINE_API_IMPL( database_api_impl, get_auctions_by_status )
+{
+   vector< api_auction_object > result;
+   const auto& auction_idx = _db.get_index<auction_index>().indices().get<by_status>();
+   auto status = args[0].as< string >();
+
+   auto itr = auction_idx.lower_bound(status);
+   while( itr != auction_idx.end() && result.size() < args[1].as< uint32_t >()) {
+      if (itr->status == status) {
+         result.push_back( *itr );
+      }
+      ++itr;
+   }
+   return result;
+}
+
 DEFINE_LOCKLESS_APIS( database_api,
    (get_config)
    (get_version)
@@ -1208,6 +1232,8 @@ DEFINE_READ_APIS( database_api,
    (get_witnesses)
    (get_witness_by_account)
    (get_witness_count)
+   (get_auction)
+   (get_auctions_by_status)
 )
 
 } } } // morphene::plugins::database_api

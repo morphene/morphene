@@ -351,6 +351,43 @@ struct broadcast_transaction_synchronous_return
    bool                  expired   = false;
 };
 
+struct api_auction_object
+{
+  api_auction_object() {}
+  api_auction_object( const chain::auction_object& c ) :
+    id( c.id ),
+    title( c.title ),
+    permlink( c.permlink ),
+    image( c.image ),
+    witness( c.witness ),
+    description( c.description ),
+    status( c.status ),
+    created( c.created ),
+    start_time( c.start_time ),
+    end_time( c.end_time ),
+    bids_count( c.bids_count ),
+    bids_value( c.bids_value ),
+    min_accepted_bids( c.min_accepted_bids ),
+    extensions( c.extensions )
+  {}
+
+    auction_id_type         id;
+
+    string                  title;
+    string                  permlink;
+    string                  image;
+    account_name_type       witness;
+    string                  description;
+    string                  status;
+    time_point_sec          created;
+    time_point_sec          start_time;
+    time_point_sec          end_time;
+    uint32_t                bids_count;
+    legacy_asset            bids_value;
+    legacy_asset            min_accepted_bids;
+    extensions_type         extensions;
+};
+
 } } } // morphene::plugins::database_api
 
 FC_REFLECT( morphene::plugins::database_api::api_account_object,
@@ -441,3 +478,7 @@ FC_REFLECT_ENUM( morphene::plugins::database_api::withdraw_route_type, (incoming
 
 FC_REFLECT( morphene::plugins::database_api::broadcast_transaction_synchronous_return,
             (id)(block_num)(trx_num)(expired) )
+
+FC_REFLECT( morphene::plugins::database_api::api_auction_object, 
+            (id)(title)(permlink)(image)(witness)(description)(status)(created)(start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)(extensions)
+          )
