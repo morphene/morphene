@@ -35,5 +35,8 @@ MORPHENE_DEFINE_EVALUATOR( reset_account )
 MORPHENE_DEFINE_EVALUATOR( set_reset_account )
 MORPHENE_DEFINE_EVALUATOR( delegate_vesting_shares )
 MORPHENE_DEFINE_EVALUATOR( witness_set_properties )
+MORPHENE_DEFINE_EVALUATOR( create_auction )
+MORPHENE_DEFINE_EVALUATOR( update_auction )
+MORPHENE_DEFINE_EVALUATOR( delete_auction )
 
 } } // morphene::chain

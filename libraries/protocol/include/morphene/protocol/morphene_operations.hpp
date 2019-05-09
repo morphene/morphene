@@ -647,6 +647,68 @@ namespace morphene { namespace protocol {
       void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( delegator ); }
       void validate() const;
    };
+
+   /** Penny Auction Operations **/
+
+   /**
+    * Create new auction
+    */
+   struct create_auction_operation : public base_operation
+   {
+      string            title;
+      string            permlink;
+      string            image;
+      account_name_type witness;
+      string            description;
+      string            status = "pending";
+      time_point_sec    created;
+      time_point_sec    start_time;
+      time_point_sec    end_time;
+      uint32_t          bids_count = 0;
+      legacy_asset      bids_value = legacy_asset( 0, MORPH_SYMBOL );
+      legacy_asset      min_accepted_bids = legacy_asset( 1000000000, MORPH_SYMBOL );
+
+      extensions_type extensions;
+
+      void              validate()const;
+      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( witness ); }
+   };
+
+   /**
+    * Update existing auction
+    */
+   struct update_auction_operation : public base_operation
+   {
+      string            title;
+      string            permlink;
+      string            image;
+      account_name_type witness;
+      string            description;
+      string            status = "pending";
+      time_point_sec    created;
+      time_point_sec    start_time;
+      time_point_sec    end_time;
+      uint32_t          bids_count = 0;
+      legacy_asset      bids_value = legacy_asset( 0, MORPH_SYMBOL );
+      legacy_asset      min_accepted_bids = legacy_asset( 1000000000, MORPH_SYMBOL );
+
+      extensions_type extensions;
+
+      void              validate()const;
+      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( witness ); }
+   };
+
+   /**
+    * Delete existing auction (can only delete pending auctions)
+    */
+   struct delete_auction_operation : public base_operation
+   {
+      string            permlink;
+      account_name_type witness;
+
+      void              validate()const;
+      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( witness ); }
+   };
 } } // morphene::protocol
 
 
@@ -717,3 +779,7 @@ FC_REFLECT( morphene::protocol::request_account_recovery_operation, (recovery_ac
 FC_REFLECT( morphene::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) );
 FC_REFLECT( morphene::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
 FC_REFLECT( morphene::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
+
+FC_REFLECT( morphene::protocol::create_auction_operation, (title)(permlink)(image)(witness)(description)(status)(created)(start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)(extensions) );
+FC_REFLECT( morphene::protocol::update_auction_operation, (title)(permlink)(image)(witness)(description)(status)(created)(start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)(extensions) );
+FC_REFLECT( morphene::protocol::delete_auction_operation, (permlink)(witness) );

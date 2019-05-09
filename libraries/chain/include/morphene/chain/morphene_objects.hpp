@@ -1,5 +1,6 @@
 #pragma once
 
+#include <morphene/protocol/base.hpp>
 #include <morphene/protocol/authority.hpp>
 #include <morphene/protocol/morphene_operations.hpp>
 #include <morphene/protocol/misc_utilities.hpp>
@@ -16,6 +17,7 @@ namespace morphene { namespace chain {
    using morphene::protocol::legacy_asset;
    using morphene::protocol::price;
    using morphene::protocol::asset_symbol_type;
+   using morphene::protocol::extensions_type;
    using chainbase::t_deque;
 
    class escrow_object : public object< escrow_object_type, escrow_object >
@@ -68,6 +70,48 @@ namespace morphene { namespace chain {
          uint16_t          percent = 0;
          bool              auto_vest = false;
    };
+
+   class auction_object : public object< auction_object_type, auction_object >
+   {
+      public:
+         template< typename Constructor, typename Allocator >
+         auction_object( Constructor&& c, allocator< Allocator > a )
+         {
+            c( *this );
+         }
+
+         auction_object(){}
+
+         id_type           id;
+
+         string            title;
+         string            permlink;
+         string            image;
+         account_name_type witness;
+         string            description;
+         string            status = "pending";
+         time_point_sec    created;
+         time_point_sec    start_time;
+         time_point_sec    end_time;
+         uint32_t          bids_count = 0;
+         legacy_asset      bids_value = legacy_asset( 0, MORPH_SYMBOL );
+         legacy_asset      min_accepted_bids = legacy_asset( 1000000000, MORPH_SYMBOL );
+
+         extensions_type extensions;
+   };
+
+
+   struct by_permlink;
+   struct by_status;
+   typedef multi_index_container<
+      auction_object,
+      indexed_by<
+         ordered_unique< tag< by_id >, member< auction_object, create_auction_id_type, &auction_object::id > >,
+         ordered_unique< tag< by_permlink >, member< auction_object, string, &auction_object::permlink > >,
+         ordered_non_unique< tag< by_status >, member< auction_object, string, &auction_object::status > >
+      >,
+      allocator< auction_object >
+   > auction_index;
 
 
    struct by_withdraw_route;
@@ -131,3 +175,9 @@ FC_REFLECT( morphene::chain::escrow_object,
              (morph_balance)(pending_fee)
              (to_approved)(agent_approved)(disputed) )
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::escrow_object, morphene::chain::escrow_index )
+
+FC_REFLECT( morphene::chain::auction_object,
+             (id)(title)(permlink)(image)(witness)(description)(status)
+             (created)(start_time)(end_time)
+             (bids_count)(bids_value)(min_accepted_bids)(extensions) )
+CHAINBASE_SET_INDEX_TYPE( morphene::chain::auction_object, morphene::chain::auction_index )

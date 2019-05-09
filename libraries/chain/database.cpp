@@ -1618,6 +1618,9 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< account_create_with_delegation_evaluator >();
    _my->_evaluator_registry.register_evaluator< delegate_vesting_shares_evaluator        >();
    _my->_evaluator_registry.register_evaluator< witness_set_properties_evaluator         >();
+   _my->_evaluator_registry.register_evaluator< create_auction_evaluator                 >();
+   _my->_evaluator_registry.register_evaluator< update_auction_evaluator                 >();
+   _my->_evaluator_registry.register_evaluator< delete_auction_evaluator                 >();
 }
 
 
@@ -1656,6 +1659,7 @@ void database::initialize_indexes()
    add_core_index< escrow_index                            >(*this);
    add_core_index< vesting_delegation_index                >(*this);
    add_core_index< vesting_delegation_expiration_index     >(*this);
+   add_core_index< auction_index                           >(*this);
 
    _plugin_index_signal();
 }

@@ -195,6 +195,21 @@ struct get_resource_user_visitor
       return MORPHENE_INIT_WITNESS_NAME;
    }
 
+   account_name_type operator()( const create_auction_operation& op )const
+   {
+      return op.witness;
+   }
+
+   account_name_type operator()( const update_auction_operation& op )const
+   {
+      return op.witness;
+   }
+
+   account_name_type operator()( const delete_auction_operation& op )const
+   {
+      return op.witness;
+   }
+
    template< typename Op >
    account_name_type operator()( const Op& op )const
    {
@@ -646,6 +661,21 @@ struct pre_apply_operation_visitor
       regenerate< false >( _current_witness );
    }
 
+   void operator()( const create_auction_operation& op )const
+   {
+      regenerate( op.witness );
+   }
+
+   void operator()( const update_auction_operation& op )const
+   {
+      regenerate( op.witness );
+   }
+
+   void operator()( const delete_auction_operation& op )const
+   {
+      regenerate( op.witness );
+   }
+
    template< typename Op >
    void operator()( const Op& op )const {}
 };
@@ -700,6 +730,21 @@ struct post_apply_operation_visitor
       create_rc_account< true >( _db, _current_time, worker_name, legacy_asset( 0, MORPH_SYMBOL ) );
       _mod_accounts.emplace_back( worker_name );
       _mod_accounts.emplace_back( _current_witness );
+   }
+
+   void operator()( const create_auction_operation& op )const
+   {
+      _mod_accounts.emplace_back( op.witness );
+   }
+
+   void operator()( const update_auction_operation& op )const
+   {
+      _mod_accounts.emplace_back( op.witness );
+   }
+
+   void operator()( const delete_auction_operation& op )const
+   {
+      _mod_accounts.emplace_back( op.witness );
    }
 
    void operator()( const transfer_to_vesting_operation& op )

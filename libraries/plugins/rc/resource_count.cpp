@@ -201,6 +201,10 @@ struct count_operation_visitor
    void operator()( const set_reset_account_operation& ) const {}
    void operator()( const pow_operation& ) const {}
 
+   void operator()( const create_auction_operation& ) const {}
+   void operator()( const update_auction_operation& ) const {}
+   void operator()( const delete_auction_operation& ) const {}
+
    // Virtual Ops
    void operator()( const fill_vesting_withdraw_operation& ) const {}
    void operator()( const shutdown_witness_operation& ) const {}

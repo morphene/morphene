@@ -45,6 +45,10 @@ namespace morphene { namespace protocol {
             account_create_with_delegation_operation,
             witness_set_properties_operation,
 
+            create_auction_operation,
+            update_auction_operation,
+            delete_auction_operation,
+
             /// virtual operations below this point
             fill_vesting_withdraw_operation,
             shutdown_witness_operation,

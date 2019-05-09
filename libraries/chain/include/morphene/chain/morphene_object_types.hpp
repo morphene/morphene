@@ -56,6 +56,7 @@ enum object_type
    block_stats_object_type,
    vesting_delegation_object_type,
    vesting_delegation_expiration_object_type,
+   auction_object_type,
 };
 
 class dynamic_global_property_object;
@@ -77,6 +78,7 @@ class escrow_object;
 class block_stats_object;
 class vesting_delegation_object;
 class vesting_delegation_expiration_object;
+class auction_object;
 
 typedef oid< dynamic_global_property_object         > dynamic_global_property_id_type;
 typedef oid< account_object                         > account_id_type;
@@ -97,6 +99,7 @@ typedef oid< escrow_object                          > escrow_id_type;
 typedef oid< block_stats_object                     > block_stats_id_type;
 typedef oid< vesting_delegation_object              > vesting_delegation_id_type;
 typedef oid< vesting_delegation_expiration_object   > vesting_delegation_expiration_id_type;
+typedef oid< auction_object                  > create_auction_id_type;
 
 enum bandwidth_type
 {
@@ -177,7 +180,9 @@ FC_REFLECT_ENUM( morphene::chain::object_type,
                  (escrow_object_type)
                  (block_stats_object_type)
                  (vesting_delegation_object_type)
-                 (vesting_delegation_expiration_object_type) )
+                 (vesting_delegation_expiration_object_type)
+                 (auction_object_type)
+                )
 
 #ifndef ENABLE_STD_ALLOCATOR
 FC_REFLECT_TYPENAME( morphene::chain::shared_string )

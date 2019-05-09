@@ -401,4 +401,27 @@ namespace morphene { namespace protocol {
       FC_ASSERT( vesting_shares >= asset( 0, VESTS_SYMBOL ), "Delegation cannot be negative" );
    }
 
+   void create_auction_operation::validate()const
+   {
+      validate_account_name ( witness );
+      FC_ASSERT( title.size() > 0, "Title is required" );
+      FC_ASSERT( permlink.size() > 0, "Permlink is required" );
+      FC_ASSERT( description.size() <= MORPHENE_MAX_MEMO_SIZE, "Description field is too large (> 2048 bytes)" );
+      FC_ASSERT( is_asset_type( min_accepted_bids, MORPH_SYMBOL ), "Minimum accepted bids must be MORPH" );
+   }
+
+   void update_auction_operation::validate()const
+   {
+      validate_account_name ( witness );
+      FC_ASSERT( title.size() > 0, "Title is required" );
+      FC_ASSERT( permlink.size() > 0, "Permlink is required" );
+      FC_ASSERT( description.size() <= MORPHENE_MAX_MEMO_SIZE, "Description field is too large (> 2048 bytes)" );
+      FC_ASSERT( is_asset_type( min_accepted_bids, MORPH_SYMBOL ), "Minimum accepted bids must be MORPH" );
+   }
+
+   void delete_auction_operation::validate()const
+   {
+      validate_account_name ( witness );
+   }
+
 } } // morphene::protocol
