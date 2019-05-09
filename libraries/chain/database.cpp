@@ -1509,6 +1509,32 @@ void database::process_subsidized_accounts()
    }
 }
 
+void database::process_auctions()
+{
+   const auto& auction_idx = get_index< auction_index >().indices().get< by_status >();
+   auto itr = auction_idx.begin();
+   while( itr != auction_idx.end() ) {
+      if( itr->status == "pending" && itr->start_time <= head_block_time() && itr->end_time >= head_block_time() )
+      {
+         modify( *itr, [&]( auction_object& a )
+         {
+            a.status = "active";
+            a.last_updated = head_block_time();
+         });
+      }
+      else if( itr->status == "active" && itr->end_time <= head_block_time() )
+      {
+         modify( *itr, [&]( auction_object& a )
+         {
+            a.status = "ended";
+            a.last_updated = head_block_time();
+         });
+         // payout bids_value
+      }
+      ++itr;
+   }
+}
+
 void database::account_recovery_processing()
 {
    // Clear expired recovery requests
@@ -2042,6 +2068,8 @@ void database::_apply_block( const signed_block& next_block )
    process_funds();
    process_vesting_withdrawals();
    process_subsidized_accounts();
+
+   process_auctions();
 
    account_recovery_processing();
    expire_escrow_ratification();

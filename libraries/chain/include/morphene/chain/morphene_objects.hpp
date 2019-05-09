@@ -90,12 +90,13 @@ namespace morphene { namespace chain {
          account_name_type witness;
          string            description;
          string            status = "pending";
-         time_point_sec    created;
-         time_point_sec    start_time;
-         time_point_sec    end_time;
+         time_point_sec    start_time = fc::time_point_sec::min();
+         time_point_sec    end_time = fc::time_point_sec::maximum();
          uint32_t          bids_count = 0;
          legacy_asset      bids_value = legacy_asset( 0, MORPH_SYMBOL );
-         legacy_asset      min_accepted_bids = legacy_asset( 1000000000, MORPH_SYMBOL );
+         legacy_asset      min_accepted_bids = legacy_asset( 1000, MORPH_SYMBOL );
+         time_point_sec    created;
+         time_point_sec    last_updated;
 
          extensions_type extensions;
    };
@@ -178,6 +179,6 @@ CHAINBASE_SET_INDEX_TYPE( morphene::chain::escrow_object, morphene::chain::escro
 
 FC_REFLECT( morphene::chain::auction_object,
              (id)(title)(permlink)(image)(witness)(description)(status)
-             (created)(start_time)(end_time)
-             (bids_count)(bids_value)(min_accepted_bids)(extensions) )
+             (start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)
+             (created)(last_updated)(extensions) )
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::auction_object, morphene::chain::auction_index )

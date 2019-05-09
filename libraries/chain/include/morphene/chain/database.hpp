@@ -336,6 +336,9 @@ namespace morphene { namespace chain {
          void process_vesting_withdrawals();
          void process_funds();
          void process_subsidized_accounts();
+
+         void process_auctions();
+
          void account_recovery_processing();
          void expire_escrow_ratification();
 

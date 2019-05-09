@@ -1355,26 +1355,58 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
 
 void create_auction_evaluator::do_apply ( const create_auction_operation& op )
 {
-   ilog("create_auction_operation eval");
+   auto auction = _db.find< auction_object, by_permlink >( op.permlink );
+   FC_ASSERT(auction == nullptr, "Auction with permlink: ${p} already exists", ("p",op.permlink));
+   if( op.start_time != fc::time_point_sec::min() )
+      FC_ASSERT( op.start_time > _db.head_block_time(), "The auction start_time must be after head block time." );
+   FC_ASSERT( op.end_time > op.start_time, "The auction end_time must be after start_time block time." );
    _db.create< auction_object >( [&]( auction_object& w ) {
-      w.witness = op.witness;
+      w.title = op.title;
       w.permlink = op.permlink;
+      w.image = op.image;
+      w.witness = op.witness;
+      w.description = op.description;
+      w.start_time = op.start_time;
+      w.end_time = op.end_time;
+      w.min_accepted_bids = op.min_accepted_bids;
       w.created = _db.head_block_time();
+      w.last_updated = _db.head_block_time();
    });
 }
 
 void update_auction_evaluator::do_apply ( const update_auction_operation& op )
 {
-   ilog("update_auction_operation eval");
    auto auction = _db.find< auction_object, by_permlink >( op.permlink );
    FC_ASSERT(auction != nullptr, "Unable to find auction with permlink: ${p}", ("p",op.permlink));
+   FC_ASSERT(auction->status == "pending", "Can only update auction with 'pending' status");
+   FC_ASSERT( op.start_time > _db.head_block_time(), "The auction start_time must be after head block time." );
+   FC_ASSERT( op.end_time > op.start_time, "The auction end_time must be after start_time block time." );
+   _db.modify( *auction, [&]( auction_object& obj )
+   {
+      if( op.title.size() > 0 )
+         obj.title = op.title;
+      if( op.permlink.size() > 0 )
+         obj.permlink = op.permlink;
+      if( op.image.size() > 0 )
+         obj.image = op.image;
+      if( op.witness.size() > 0 )
+         obj.witness = op.witness;
+      if( op.description.size() > 0 )
+         obj.description = op.description;
+
+      obj.start_time = op.start_time;
+      obj.end_time = op.end_time;
+      obj.min_accepted_bids = op.min_accepted_bids;
+      obj.last_updated = _db.head_block_time();
+   });
 }
 
 void delete_auction_evaluator::do_apply ( const delete_auction_operation& op )
 {
-   ilog("delete_auction_operation eval");
    auto auction = _db.find< auction_object, by_permlink >( op.permlink );
    FC_ASSERT(auction != nullptr, "Unable to find auction with permlink: ${p}", ("p",op.permlink));
+   FC_ASSERT(auction->witness == op.witness, "Can only delete auction created with your witness authority");
+   FC_ASSERT(auction->status == "pending", "Can only delete auction with 'pending' status");
    _db.remove( *auction );
 }
 
