@@ -204,6 +204,7 @@ struct count_operation_visitor
    void operator()( const create_auction_operation& ) const {}
    void operator()( const update_auction_operation& ) const {}
    void operator()( const delete_auction_operation& ) const {}
+   void operator()( const place_bid_operation& ) const {}
 
    // Virtual Ops
    void operator()( const fill_vesting_withdraw_operation& ) const {}

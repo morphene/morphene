@@ -197,17 +197,22 @@ struct get_resource_user_visitor
 
    account_name_type operator()( const create_auction_operation& op )const
    {
-      return op.witness;
+      return op.consigner;
    }
 
    account_name_type operator()( const update_auction_operation& op )const
    {
-      return op.witness;
+      return op.consigner;
    }
 
    account_name_type operator()( const delete_auction_operation& op )const
    {
-      return op.witness;
+      return op.consigner;
+   }
+
+   account_name_type operator()( const place_bid_operation& op )const
+   {
+      return op.bidder;
    }
 
    template< typename Op >
@@ -663,17 +668,22 @@ struct pre_apply_operation_visitor
 
    void operator()( const create_auction_operation& op )const
    {
-      regenerate( op.witness );
+      regenerate( op.consigner );
    }
 
    void operator()( const update_auction_operation& op )const
    {
-      regenerate( op.witness );
+      regenerate( op.consigner );
    }
 
    void operator()( const delete_auction_operation& op )const
    {
-      regenerate( op.witness );
+      regenerate( op.consigner );
+   }
+
+   void operator()( const place_bid_operation& op )const
+   {
+      regenerate( op.bidder );
    }
 
    template< typename Op >
@@ -734,17 +744,22 @@ struct post_apply_operation_visitor
 
    void operator()( const create_auction_operation& op )const
    {
-      _mod_accounts.emplace_back( op.witness );
+      _mod_accounts.emplace_back( op.consigner );
    }
 
    void operator()( const update_auction_operation& op )const
    {
-      _mod_accounts.emplace_back( op.witness );
+      _mod_accounts.emplace_back( op.consigner );
    }
 
    void operator()( const delete_auction_operation& op )const
    {
-      _mod_accounts.emplace_back( op.witness );
+      _mod_accounts.emplace_back( op.consigner );
+   }
+
+   void operator()( const place_bid_operation& op )const
+   {
+      _mod_accounts.emplace_back( op.bidder );
    }
 
    void operator()( const transfer_to_vesting_operation& op )

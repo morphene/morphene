@@ -655,10 +655,10 @@ namespace morphene { namespace protocol {
     */
    struct create_auction_operation : public base_operation
    {
+      account_name_type consigner;
       string            title;
       string            permlink;
       string            image;
-      account_name_type witness;
       string            description;
       string            status = "pending";
       time_point_sec    start_time = fc::time_point_sec::min();
@@ -673,7 +673,7 @@ namespace morphene { namespace protocol {
       extensions_type extensions;
 
       void              validate()const;
-      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( witness ); }
+      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( consigner ); }
    };
 
    /**
@@ -681,10 +681,10 @@ namespace morphene { namespace protocol {
     */
    struct update_auction_operation : public base_operation
    {
+      account_name_type consigner;
       string            title;
       string            permlink;
       string            image;
-      account_name_type witness;
       string            description;
       string            status = "pending";
       time_point_sec    start_time = fc::time_point_sec::min();
@@ -699,7 +699,7 @@ namespace morphene { namespace protocol {
       extensions_type extensions;
 
       void              validate()const;
-      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( witness ); }
+      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( consigner ); }
    };
 
    /**
@@ -707,11 +707,23 @@ namespace morphene { namespace protocol {
     */
    struct delete_auction_operation : public base_operation
    {
+      account_name_type consigner;
       string            permlink;
-      account_name_type witness;
 
       void              validate()const;
-      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( witness ); }
+      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( consigner ); }
+   };
+
+   /**
+    * Place a bid on an auction
+    */
+   struct place_bid_operation : public base_operation
+   {
+      account_name_type bidder;
+      string            permlink;
+
+      void              validate()const;
+      void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( bidder ); }
    };
 } } // morphene::protocol
 
@@ -784,6 +796,7 @@ FC_REFLECT( morphene::protocol::recover_account_operation, (account_to_recover)(
 FC_REFLECT( morphene::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
 FC_REFLECT( morphene::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
 
-FC_REFLECT( morphene::protocol::create_auction_operation, (title)(permlink)(image)(witness)(description)(status)(start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)(created)(last_updated)(extensions) );
-FC_REFLECT( morphene::protocol::update_auction_operation, (title)(permlink)(image)(witness)(description)(status)(start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)(created)(last_updated)(extensions) );
-FC_REFLECT( morphene::protocol::delete_auction_operation, (permlink)(witness) );
+FC_REFLECT( morphene::protocol::create_auction_operation, (consigner)(title)(permlink)(image)(description)(status)(start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)(created)(last_updated)(extensions) );
+FC_REFLECT( morphene::protocol::update_auction_operation, (consigner)(title)(permlink)(image)(description)(status)(start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)(created)(last_updated)(extensions) );
+FC_REFLECT( morphene::protocol::delete_auction_operation, (consigner)(permlink) );
+FC_REFLECT( morphene::protocol::place_bid_operation, (bidder)(permlink) );

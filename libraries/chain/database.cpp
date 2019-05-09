@@ -1529,7 +1529,8 @@ void database::process_auctions()
             a.status = "ended";
             a.last_updated = head_block_time();
          });
-         // payout bids_value
+         // check auction for reward type
+         // payout bids_value in reward type
       }
       ++itr;
    }
@@ -1647,6 +1648,7 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< create_auction_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< update_auction_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< delete_auction_evaluator                 >();
+   _my->_evaluator_registry.register_evaluator< place_bid_evaluator                      >();
 }
 
 

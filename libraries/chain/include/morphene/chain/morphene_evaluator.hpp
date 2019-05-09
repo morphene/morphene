@@ -38,5 +38,6 @@ MORPHENE_DEFINE_EVALUATOR( witness_set_properties )
 MORPHENE_DEFINE_EVALUATOR( create_auction )
 MORPHENE_DEFINE_EVALUATOR( update_auction )
 MORPHENE_DEFINE_EVALUATOR( delete_auction )
+MORPHENE_DEFINE_EVALUATOR( place_bid )
 
 } } // morphene::chain

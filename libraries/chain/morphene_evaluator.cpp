@@ -621,21 +621,7 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
    const auto& account = _db.get_account( o.account );
 
    if( o.vesting_shares.amount < 0 )
-   {
-      // TODO: Update this to a HF 20 check
-#ifndef IS_TEST_NET
-      if( _db.head_block_num() > 23847548 )
-      {
-#endif
-         FC_ASSERT( false, "Cannot withdraw negative VESTS. account: ${account}, vests:${vests}",
-            ("account", o.account)("vests", o.vesting_shares) );
-#ifndef IS_TEST_NET
-      }
-#endif
-
-      // else, no-op
-      return;
-   }
+      FC_ASSERT( false, "Cannot withdraw negative VESTS. account: ${account}, vests:${vests}" )
 
 
    FC_ASSERT( account.vesting_shares >= legacy_asset( 0, VESTS_SYMBOL ), "Account does not have sufficient VESTS for withdraw." );
@@ -1364,7 +1350,7 @@ void create_auction_evaluator::do_apply ( const create_auction_operation& op )
       w.title = op.title;
       w.permlink = op.permlink;
       w.image = op.image;
-      w.witness = op.witness;
+      w.consigner = op.consigner;
       w.description = op.description;
       w.start_time = op.start_time;
       w.end_time = op.end_time;
@@ -1389,8 +1375,6 @@ void update_auction_evaluator::do_apply ( const update_auction_operation& op )
          obj.permlink = op.permlink;
       if( op.image.size() > 0 )
          obj.image = op.image;
-      if( op.witness.size() > 0 )
-         obj.witness = op.witness;
       if( op.description.size() > 0 )
          obj.description = op.description;
 
@@ -1405,9 +1389,22 @@ void delete_auction_evaluator::do_apply ( const delete_auction_operation& op )
 {
    auto auction = _db.find< auction_object, by_permlink >( op.permlink );
    FC_ASSERT(auction != nullptr, "Unable to find auction with permlink: ${p}", ("p",op.permlink));
-   FC_ASSERT(auction->witness == op.witness, "Can only delete auction created with your witness authority");
+   FC_ASSERT(auction->consigner == op.consigner, "Can only delete auction created with the consigner authority");
    FC_ASSERT(auction->status == "pending", "Can only delete auction with 'pending' status");
    _db.remove( *auction );
+}
+
+void place_bid_evaluator::do_apply ( const place_bid_operation& op )
+{
+   ilog("place bid eval");
+   auto auction = _db.find< auction_object, by_permlink >( op.permlink );
+   FC_ASSERT(auction != nullptr, "Unable to find auction with permlink: ${p}", ("p",op.permlink));
+   legacy_asset amount = legacy_asset(1000, MORPH_SYMBOL);
+   _db.adjust_balance( op.bidder, -amount );
+   _db.modify( *auction, [&]( auction_object& obj )
+   {
+      obj.bids_value += amount;
+   });
 }
 
 } } // morphene::chain

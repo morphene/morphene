@@ -359,7 +359,7 @@ struct api_auction_object
     title( c.title ),
     permlink( c.permlink ),
     image( c.image ),
-    witness( c.witness ),
+    consigner( c.consigner ),
     description( c.description ),
     status( c.status ),
     start_time( c.start_time ),
@@ -377,7 +377,7 @@ struct api_auction_object
     string                  title;
     string                  permlink;
     string                  image;
-    account_name_type       witness;
+    account_name_type       consigner;
     string                  description;
     string                  status;
     time_point_sec          start_time;
@@ -486,7 +486,7 @@ FC_REFLECT( morphene::plugins::database_api::api_auction_object,
             (title)
             (permlink)
             (image)
-            (witness)
+            (consigner)
             (description)
             (status)
             (start_time)

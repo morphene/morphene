@@ -48,6 +48,7 @@ namespace morphene { namespace protocol {
             create_auction_operation,
             update_auction_operation,
             delete_auction_operation,
+            place_bid_operation,
 
             /// virtual operations below this point
             fill_vesting_withdraw_operation,
