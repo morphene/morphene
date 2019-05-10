@@ -93,7 +93,8 @@ namespace morphene { namespace chain {
          time_point_sec    start_time = fc::time_point_sec::min();
          time_point_sec    end_time = fc::time_point_sec::maximum();
          uint32_t          bids_count = 0;
-         legacy_asset      bids_value = legacy_asset( 0, MORPH_SYMBOL );
+         legacy_asset      total_payout = legacy_asset( 0, MORPH_SYMBOL );
+         legacy_asset      fee = legacy_asset( 0, MORPH_SYMBOL );
          time_point_sec    created = fc::time_point_sec::min();
          time_point_sec    last_paid = fc::time_point_sec::min();
          time_point_sec    last_updated = fc::time_point_sec::min();
@@ -208,7 +209,7 @@ CHAINBASE_SET_INDEX_TYPE( morphene::chain::escrow_object, morphene::chain::escro
 
 FC_REFLECT( morphene::chain::auction_object,
              (id)(consigner)(title)(permlink)(image)(description)(status)
-             (start_time)(end_time)(bids_count)(bids_value)
+             (start_time)(end_time)(bids_count)(total_payout)(fee)
              (created)(last_paid)(last_updated)(extensions) )
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::auction_object, morphene::chain::auction_index )
 

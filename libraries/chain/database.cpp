@@ -1536,8 +1536,8 @@ void database::process_auctions()
          auto bid_itr = bid_idx.upper_bound(itr->permlink);
          --bid_itr;
 
-         operation vop = auction_payout_operation( bid_itr->bidder, itr->bids_value );
-         adjust_balance( bid_itr->bidder, itr->bids_value );
+         operation vop = auction_payout_operation( bid_itr->bidder, itr->total_payout );
+         adjust_balance( bid_itr->bidder, itr->total_payout );
 
          modify( *itr, [&]( auction_object& a )
          {
@@ -1548,6 +1548,16 @@ void database::process_auctions()
          });  
 
          post_push_virtual_operation( vop );
+      }
+      else if( itr->status == "ended" && itr->last_paid == fc::time_point_sec::min() )
+      {
+         adjust_balance( itr->consigner, itr->total_payout );
+
+         modify( *itr, [&]( auction_object& a )
+         {
+            a.last_paid = head_block_time();
+            a.last_updated = head_block_time();
+         });
       }
       ++itr;
    }

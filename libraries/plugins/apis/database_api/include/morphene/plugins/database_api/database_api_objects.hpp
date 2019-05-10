@@ -365,7 +365,8 @@ struct api_auction_object
     start_time( c.start_time ),
     end_time( c.end_time ),
     bids_count( c.bids_count ),
-    bids_value( c.bids_value ),
+    total_payout( c.total_payout ),
+    fee( c.fee ),
     created( c.created ),
     last_paid( c.last_paid ),
     last_updated( c.last_updated ),
@@ -383,7 +384,8 @@ struct api_auction_object
     time_point_sec          start_time;
     time_point_sec          end_time;
     uint32_t                bids_count;
-    legacy_asset            bids_value;
+    legacy_asset            total_payout;
+    legacy_asset            fee;
     time_point_sec          created;
     time_point_sec          last_paid;
     time_point_sec          last_updated;
@@ -509,7 +511,8 @@ FC_REFLECT( morphene::plugins::database_api::api_auction_object,
             (start_time)
             (end_time)
             (bids_count)
-            (bids_value)
+            (total_payout)
+            (fee)
             (created)
             (last_paid)
             (last_updated)
