@@ -1542,6 +1542,8 @@ void database::process_auctions()
          modify( *itr, [&]( auction_object& a )
          {
             a.last_paid = head_block_time();
+            a.last_updated = head_block_time();
+
             pre_push_virtual_operation( vop );
          });  
 
