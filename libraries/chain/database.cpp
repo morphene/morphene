@@ -1529,8 +1529,23 @@ void database::process_auctions()
             a.status = "ended";
             a.last_updated = head_block_time();
          });
-         // check auction for reward type
-         // payout bids_value in reward type
+      }
+      else if( itr->status == "ended" && itr->bids_count > 0 && itr->last_paid == fc::time_point_sec::min() )
+      {
+         const auto& bid_idx = get_index< bid_index >().indices().get< by_permlink >();
+         auto bid_itr = bid_idx.upper_bound(itr->permlink);
+         --bid_itr;
+
+         operation vop = auction_payout_operation( bid_itr->bidder, itr->bids_value );
+         adjust_balance( bid_itr->bidder, itr->bids_value );
+
+         modify( *itr, [&]( auction_object& a )
+         {
+            a.last_paid = head_block_time();
+            pre_push_virtual_operation( vop );
+         });  
+
+         post_push_virtual_operation( vop );
       }
       ++itr;
    }
@@ -1688,6 +1703,7 @@ void database::initialize_indexes()
    add_core_index< vesting_delegation_index                >(*this);
    add_core_index< vesting_delegation_expiration_index     >(*this);
    add_core_index< auction_index                           >(*this);
+   add_core_index< bid_index                               >(*this);
 
    _plugin_index_signal();
 }

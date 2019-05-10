@@ -366,8 +366,8 @@ struct api_auction_object
     end_time( c.end_time ),
     bids_count( c.bids_count ),
     bids_value( c.bids_value ),
-    min_accepted_bids( c.min_accepted_bids ),
     created( c.created ),
+    last_paid( c.last_paid ),
     last_updated( c.last_updated ),
     extensions( c.extensions )
   {}
@@ -384,10 +384,27 @@ struct api_auction_object
     time_point_sec          end_time;
     uint32_t                bids_count;
     legacy_asset            bids_value;
-    legacy_asset            min_accepted_bids;
     time_point_sec          created;
+    time_point_sec          last_paid;
     time_point_sec          last_updated;
     extensions_type         extensions;
+};
+
+struct api_bid_object
+{
+  api_bid_object() {}
+  api_bid_object( const chain::bid_object& c ) :
+    id( c.id ),
+    bidder( c.bidder ),
+    permlink( c.permlink ),
+    created( c.created )
+  {}
+
+    bid_id_type             id;
+
+    account_name_type       bidder;
+    string                  permlink;
+    time_point_sec          created;
 };
 
 } } } // morphene::plugins::database_api
@@ -493,8 +510,15 @@ FC_REFLECT( morphene::plugins::database_api::api_auction_object,
             (end_time)
             (bids_count)
             (bids_value)
-            (min_accepted_bids)
             (created)
+            (last_paid)
             (last_updated)
             (extensions)
+          )
+
+FC_REFLECT( morphene::plugins::database_api::api_bid_object, 
+            (id)
+            (bidder)
+            (permlink)
+            (created)
           )

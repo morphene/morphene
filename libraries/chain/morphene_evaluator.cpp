@@ -621,7 +621,7 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
    const auto& account = _db.get_account( o.account );
 
    if( o.vesting_shares.amount < 0 )
-      FC_ASSERT( false, "Cannot withdraw negative VESTS. account: ${account}, vests:${vests}" )
+      FC_ASSERT( false, "Cannot withdraw negative VESTS. account: ${account}, vests:${vests}" );
 
 
    FC_ASSERT( account.vesting_shares >= legacy_asset( 0, VESTS_SYMBOL ), "Account does not have sufficient VESTS for withdraw." );
@@ -1354,7 +1354,6 @@ void create_auction_evaluator::do_apply ( const create_auction_operation& op )
       w.description = op.description;
       w.start_time = op.start_time;
       w.end_time = op.end_time;
-      w.min_accepted_bids = op.min_accepted_bids;
       w.created = _db.head_block_time();
       w.last_updated = _db.head_block_time();
    });
@@ -1380,7 +1379,6 @@ void update_auction_evaluator::do_apply ( const update_auction_operation& op )
 
       obj.start_time = op.start_time;
       obj.end_time = op.end_time;
-      obj.min_accepted_bids = op.min_accepted_bids;
       obj.last_updated = _db.head_block_time();
    });
 }
@@ -1396,14 +1394,32 @@ void delete_auction_evaluator::do_apply ( const delete_auction_operation& op )
 
 void place_bid_evaluator::do_apply ( const place_bid_operation& op )
 {
-   ilog("place bid eval");
    auto auction = _db.find< auction_object, by_permlink >( op.permlink );
    FC_ASSERT(auction != nullptr, "Unable to find auction with permlink: ${p}", ("p",op.permlink));
+   FC_ASSERT(auction->status == "active", "Can only bid on auction with 'active' status");
+
+   if(auction->bids_count > 0)
+   {
+      const auto& bid_idx = _db.get_index< bid_index >().indices().get< by_permlink >();
+      auto bid_itr = bid_idx.upper_bound(op.permlink);
+      --bid_itr;
+      FC_ASSERT(op.bidder != bid_itr->bidder, "Cannot bid again as you have placed the most recent bid");
+   }
+
    legacy_asset amount = legacy_asset(1000, MORPH_SYMBOL);
    _db.adjust_balance( op.bidder, -amount );
+
+   _db.create< bid_object >( [&]( bid_object& b ) {
+      b.bidder = op.bidder;
+      b.permlink = op.permlink;
+      b.created = _db.head_block_time();
+   });
+
    _db.modify( *auction, [&]( auction_object& obj )
    {
+      obj.bids_count += 1;
       obj.bids_value += amount;
+      obj.end_time += fc::seconds(10);
    });
 }
 

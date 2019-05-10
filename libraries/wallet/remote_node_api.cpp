@@ -129,4 +129,9 @@ vector< database_api::api_auction_object > remote_node_api::get_auctions_by_stat
    FC_ASSERT( false );
 }
 
+vector< database_api::api_bid_object > remote_node_api::get_bids( string, uint32_t )
+{
+   FC_ASSERT( false );
+}
+
 } }

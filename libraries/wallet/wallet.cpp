@@ -1908,4 +1908,9 @@ vector< database_api::api_auction_object > wallet_api::get_auctions_by_status ( 
    return my->_remote_api->get_auctions_by_status( status, limit );
 }
 
+vector< database_api::api_bid_object > wallet_api::get_bids ( string permlink, uint32_t limit )const
+{
+   return my->_remote_api->get_bids( permlink, limit );
+}
+
 } } // morphene::wallet

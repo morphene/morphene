@@ -174,6 +174,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.producer );
    }
 
+   void operator()( const auction_payout_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
    void operator()( const hardfork_operation& op )
    {
       _impacted.insert( MORPHENE_INIT_WITNESS_NAME );

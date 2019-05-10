@@ -16,7 +16,7 @@
 #define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-test"))
 #define MORPHENE_ADDRESS_PREFIX                   "TST"
 
-#define MORPHENE_MIN_ACCOUNT_CREATION_FEE         0
+#define MORPHENE_MIN_ACCOUNT_CREATION_FEE         int64_t(1000)
 #define MORPHENE_MAX_ACCOUNT_CREATION_FEE         int64_t(1000000000)
 
 #define MORPHENE_OWNER_UPDATE_LIMIT               fc::seconds(0)

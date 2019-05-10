@@ -94,26 +94,30 @@ namespace morphene { namespace chain {
          time_point_sec    end_time = fc::time_point_sec::maximum();
          uint32_t          bids_count = 0;
          legacy_asset      bids_value = legacy_asset( 0, MORPH_SYMBOL );
-         legacy_asset      min_accepted_bids = legacy_asset( 1000, MORPH_SYMBOL );
-         time_point_sec    created;
-         time_point_sec    last_updated;
+         time_point_sec    created = fc::time_point_sec::min();
+         time_point_sec    last_paid = fc::time_point_sec::min();
+         time_point_sec    last_updated = fc::time_point_sec::min();
 
          extensions_type extensions;
    };
 
+   class bid_object : public object< bid_object_type, bid_object >
+   {
+      public:
+         template< typename Constructor, typename Allocator >
+         bid_object( Constructor&& c, allocator< Allocator > a )
+         {
+            c( *this );
+         }
 
-   struct by_permlink;
-   struct by_status;
-   typedef multi_index_container<
-      auction_object,
-      indexed_by<
-         ordered_unique< tag< by_id >, member< auction_object, auction_id_type, &auction_object::id > >,
-         ordered_unique< tag< by_permlink >, member< auction_object, string, &auction_object::permlink > >,
-         ordered_non_unique< tag< by_status >, member< auction_object, string, &auction_object::status > >
-      >,
-      allocator< auction_object >
-   > auction_index;
+         bid_object(){}
 
+         id_type           id;
+
+         account_name_type bidder;
+         string            permlink;
+         time_point_sec    created;
+   };
 
    struct by_withdraw_route;
    struct by_destination;
@@ -162,6 +166,31 @@ namespace morphene { namespace chain {
       allocator< escrow_object >
    > escrow_index;
 
+   struct by_permlink;
+   struct by_status;
+   typedef multi_index_container<
+      auction_object,
+      indexed_by<
+         ordered_unique< tag< by_id >, member< auction_object, auction_id_type, &auction_object::id > >,
+         ordered_unique< tag< by_permlink >, member< auction_object, string, &auction_object::permlink > >,
+         ordered_non_unique< tag< by_status >, member< auction_object, string, &auction_object::status > >
+      >,
+      allocator< auction_object >
+   > auction_index;
+
+
+   struct by_bidder;
+   struct by_permlink;
+   typedef multi_index_container<
+      bid_object,
+      indexed_by<
+         ordered_unique< tag< by_id >, member< bid_object, bid_id_type, &bid_object::id > >,
+         ordered_non_unique< tag< by_bidder >, member< bid_object, account_name_type, &bid_object::bidder > >,
+         ordered_non_unique< tag< by_permlink >, member< bid_object, string, &bid_object::permlink > >
+      >,
+      allocator< bid_object >
+   > bid_index;
+
 } } // morphene::chain
 
 #include <morphene/chain/account_object.hpp>
@@ -179,6 +208,10 @@ CHAINBASE_SET_INDEX_TYPE( morphene::chain::escrow_object, morphene::chain::escro
 
 FC_REFLECT( morphene::chain::auction_object,
              (id)(consigner)(title)(permlink)(image)(description)(status)
-             (start_time)(end_time)(bids_count)(bids_value)(min_accepted_bids)
-             (created)(last_updated)(extensions) )
+             (start_time)(end_time)(bids_count)(bids_value)
+             (created)(last_paid)(last_updated)(extensions) )
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::auction_object, morphene::chain::auction_index )
+
+FC_REFLECT( morphene::chain::bid_object,
+             (id)(bidder)(permlink)(created) )
+CHAINBASE_SET_INDEX_TYPE( morphene::chain::bid_object, morphene::chain::bid_index )

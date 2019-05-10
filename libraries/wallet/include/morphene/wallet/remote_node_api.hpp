@@ -50,6 +50,7 @@ struct remote_node_api
    database_api::broadcast_transaction_synchronous_return broadcast_transaction_synchronous( database_api::signed_transaction );
    database_api::api_auction_object get_auction( string );
    vector< database_api::api_auction_object > get_auctions_by_status( string, uint32_t );
+   vector< database_api::api_bid_object > get_bids( string, uint32_t );
 };
 
 } }
@@ -80,4 +81,5 @@ FC_API( morphene::wallet::remote_node_api,
         (broadcast_transaction_synchronous)
         (get_auction)
         (get_auctions_by_status)
+        (get_bids)
       )

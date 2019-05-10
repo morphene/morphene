@@ -655,6 +655,11 @@ struct pre_apply_operation_visitor
       regenerate( op.producer );
    }
 
+   void operator()( const auction_payout_operation& op )const
+   {
+      regenerate( op.account );
+   }
+
    void operator()( const clear_null_account_balance_operation& op )const
    {
       regenerate( MORPHENE_NULL_ACCOUNT );
@@ -793,6 +798,11 @@ struct post_apply_operation_visitor
    void operator()( const producer_reward_operation& op )const
    {
       _mod_accounts.emplace_back( op.producer );
+   }
+
+   void operator()( const auction_payout_operation& op )const
+   {
+      _mod_accounts.emplace_back( op.account );
    }
 
    void operator()( const clear_null_account_balance_operation& op )const
