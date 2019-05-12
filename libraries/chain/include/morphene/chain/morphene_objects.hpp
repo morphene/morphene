@@ -94,6 +94,7 @@ namespace morphene { namespace chain {
          time_point_sec    end_time = fc::time_point_sec::maximum();
          uint32_t          bids_count = 0;
          legacy_asset      total_payout = legacy_asset( 0, MORPH_SYMBOL );
+         account_name_type last_bidder;
          legacy_asset      fee = legacy_asset( 0, MORPH_SYMBOL );
          time_point_sec    created = fc::time_point_sec::min();
          time_point_sec    last_paid = fc::time_point_sec::min();

@@ -1532,12 +1532,8 @@ void database::process_auctions()
       }
       else if( itr->status == "ended" && itr->bids_count > 0 && itr->last_paid == fc::time_point_sec::min() )
       {
-         const auto& bid_idx = get_index< bid_index >().indices().get< by_permlink >();
-         auto bid_itr = bid_idx.upper_bound(itr->permlink);
-         --bid_itr;
-
-         operation vop = auction_payout_operation( bid_itr->bidder, itr->total_payout );
-         adjust_balance( bid_itr->bidder, itr->total_payout );
+         operation vop = auction_payout_operation( itr->last_bidder, itr->total_payout );
+         adjust_balance( itr->last_bidder, itr->total_payout );
 
          modify( *itr, [&]( auction_object& a )
          {

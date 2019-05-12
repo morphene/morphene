@@ -1375,9 +1375,8 @@ void update_auction_evaluator::do_apply ( const update_auction_operation& op )
    if( auction->fee != op.fee)
    {
       auto consigner = _db.get_account( op.consigner );
-      FC_ASSERT( consigner.balance >= op.fee, "Insufficient balance to update auction.");
-      FC_ASSERT( auction->fee <= op.fee, "Can only increase auction fee.");
       fee_delta = op.fee - auction->fee;
+      FC_ASSERT( consigner.balance >= fee_delta, "Insufficient balance to update auction.");
       _db.adjust_balance( op.consigner, -fee_delta);
    }
    _db.modify( *auction, [&]( auction_object& obj )
@@ -1418,10 +1417,7 @@ void place_bid_evaluator::do_apply ( const place_bid_operation& op )
 
    if(auction->bids_count > 0)
    {
-      const auto& bid_idx = _db.get_index< bid_index >().indices().get< by_permlink >();
-      auto bid_itr = bid_idx.upper_bound(op.permlink);
-      --bid_itr;
-      FC_ASSERT(op.bidder != bid_itr->bidder, "Cannot bid again as you have placed the most recent bid");
+      FC_ASSERT(op.bidder != auction->last_bidder, "Cannot bid again as you have placed the most recent bid");
    }
 
    legacy_asset amount = legacy_asset(1000, MORPH_SYMBOL);
@@ -1437,6 +1433,7 @@ void place_bid_evaluator::do_apply ( const place_bid_operation& op )
    {
       obj.bids_count += 1;
       obj.total_payout += amount;
+      obj.last_bidder = op.bidder;
       obj.end_time += fc::seconds(10);
    });
 }
