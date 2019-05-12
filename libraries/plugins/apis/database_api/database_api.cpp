@@ -1187,10 +1187,13 @@ DEFINE_API_IMPL( database_api_impl, get_auctions_by_status )
 DEFINE_API_IMPL( database_api_impl, get_bids )
 {
    vector< api_bid_object > result;
-   const auto& auction_idx = _db.get_index<bid_index>().indices().get<by_id>();
-   auto itr = auction_idx.begin();
-   while( itr != auction_idx.end() && result.size() < args[1].as< uint32_t >()) {
-      result.push_back( *itr );
+   const auto& bid_idx = _db.get_index<bid_index>().indices().get<by_permlink>();
+   auto permlink = args[0].as< string >();
+   auto itr = bid_idx.lower_bound(permlink);
+   while( itr != bid_idx.end() && result.size() < args[1].as< uint32_t >()) {
+      if( itr->permlink == permlink) {
+         result.push_back( *itr );
+      }
       ++itr;
    }
    return result;
