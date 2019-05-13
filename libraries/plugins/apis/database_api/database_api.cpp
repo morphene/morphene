@@ -1170,18 +1170,21 @@ DEFINE_API_IMPL( database_api_impl, get_auction )
 
 DEFINE_API_IMPL( database_api_impl, get_auctions_by_status )
 {
-   vector< api_auction_object > result;
+   vector< string > statuses = args[0].as< vector< string > >();
    const auto& auction_idx = _db.get_index<auction_index>().indices().get<by_status>();
-   auto status = args[0].as< string >();
+   vector< api_auction_object > results;
 
-   auto itr = auction_idx.lower_bound(status);
-   while( itr != auction_idx.end() && result.size() < args[1].as< uint32_t >()) {
-      if (itr->status == status) {
-         result.push_back( *itr );
+   for( const auto& status: statuses )
+   {
+      auto itr = auction_idx.lower_bound(status);
+      auto itr_end = auction_idx.upper_bound(status);
+      while( itr != itr_end && results.size() < args[1].as< uint32_t >())
+      {
+         results.push_back( *itr );
+         ++itr;
       }
-      ++itr;
    }
-   return result;
+   return results;
 }
 
 DEFINE_API_IMPL( database_api_impl, get_bids )

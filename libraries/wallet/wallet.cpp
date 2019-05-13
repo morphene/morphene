@@ -1903,7 +1903,7 @@ database_api::api_auction_object wallet_api::get_auction ( string permlink )cons
    return my->_remote_api->get_auction( permlink );
 }
 
-vector< database_api::api_auction_object > wallet_api::get_auctions_by_status ( string status, uint32_t limit )const
+vector< database_api::api_auction_object > wallet_api::get_auctions_by_status ( vector< string > status, uint32_t limit )const
 {
    return my->_remote_api->get_auctions_by_status( status, limit );
 }

@@ -144,7 +144,7 @@ class wallet_api
        * @param limit the maximum number of auctions to return
        * @returns the auction object stored in the blockchain
        */
-      vector< database_api::api_auction_object > get_auctions_by_status( string status, uint32_t limit ) const;
+      vector< database_api::api_auction_object > get_auctions_by_status( vector< string > status, uint32_t limit ) const;
 
       /** Returns bids associated with an auction
        *

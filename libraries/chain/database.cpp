@@ -1532,18 +1532,25 @@ void database::process_auctions()
       }
       else if( itr->status == "ended" && itr->bids_count > 0 && itr->last_paid == fc::time_point_sec::min() )
       {
-         operation vop = auction_payout_operation( itr->last_bidder, itr->total_payout );
-         adjust_balance( itr->last_bidder, itr->total_payout );
+         auto consigner_payout = legacy_asset((itr->total_payout.amount * MORPHENE_CONSIGNER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
+         auto bidder_payout = legacy_asset((itr->total_payout.amount * MORPHENE_BIDDER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
+         operation consigner_vop = auction_payout_operation( itr->consigner, consigner_payout );
+         operation bidder_vop = auction_payout_operation( itr->last_bidder, bidder_payout );
+
+         adjust_balance( itr->consigner, consigner_payout );
+         adjust_balance( itr->last_bidder, bidder_payout );
 
          modify( *itr, [&]( auction_object& a )
          {
             a.last_paid = head_block_time();
             a.last_updated = head_block_time();
 
-            pre_push_virtual_operation( vop );
+            pre_push_virtual_operation( consigner_vop );
+            pre_push_virtual_operation( bidder_vop );
          });  
 
-         post_push_virtual_operation( vop );
+         post_push_virtual_operation( consigner_vop );
+         post_push_virtual_operation( bidder_vop );
       }
       else if( itr->status == "ended" && itr->last_paid == fc::time_point_sec::min() )
       {

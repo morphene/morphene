@@ -95,6 +95,9 @@
 
 #define MORPHENE_MIN_PRODUCER_REWARD             legacy_asset( 1, MORPH_SYMBOL )
 
+#define MORPHENE_CONSIGNER_PAYOUT_PERCENT					(10 * MORPHENE_1_PERCENT)
+#define MORPHENE_BIDDER_PAYOUT_PERCENT						(90 * MORPHENE_1_PERCENT)
+
 // 5ccc e802 de5f
 // int(expm1( log1p( 1 ) / BLOCKS_PER_YEAR ) * 2**MORPHENE_APR_PERCENT_SHIFT_PER_BLOCK / 100000 + 0.5)
 // we use 100000 here instead of 10000 because we end up creating an additional 9x for vesting

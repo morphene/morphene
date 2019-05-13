@@ -49,7 +49,7 @@ struct remote_node_api
    void broadcast_transaction( database_api::signed_transaction );
    database_api::broadcast_transaction_synchronous_return broadcast_transaction_synchronous( database_api::signed_transaction );
    database_api::api_auction_object get_auction( string );
-   vector< database_api::api_auction_object > get_auctions_by_status( string, uint32_t );
+   vector< database_api::api_auction_object > get_auctions_by_status( vector< string >, uint32_t );
    vector< database_api::api_bid_object > get_bids( string, uint32_t );
 };
 
