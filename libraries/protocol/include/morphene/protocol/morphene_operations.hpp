@@ -656,19 +656,11 @@ namespace morphene { namespace protocol {
    struct create_auction_operation : public base_operation
    {
       account_name_type consigner;
-      string            title;
       string            permlink;
-      string            image;
-      string            description;
       string            status = "pending";
       time_point_sec    start_time = fc::time_point_sec::min();
       time_point_sec    end_time = fc::time_point_sec::maximum();
-      uint32_t          bids_count = 0;
-      legacy_asset      total_payout = legacy_asset( 0, MORPH_SYMBOL );
       legacy_asset      fee = legacy_asset( 0, MORPH_SYMBOL );
-
-      time_point_sec    created;
-      time_point_sec    last_updated;
 
       extensions_type extensions;
 
@@ -682,19 +674,11 @@ namespace morphene { namespace protocol {
    struct update_auction_operation : public base_operation
    {
       account_name_type consigner;
-      string            title;
       string            permlink;
-      string            image;
-      string            description;
       string            status = "pending";
       time_point_sec    start_time = fc::time_point_sec::min();
       time_point_sec    end_time = fc::time_point_sec::maximum();
-      uint32_t          bids_count = 0;
-      legacy_asset      total_payout = legacy_asset( 0, MORPH_SYMBOL );
       legacy_asset      fee = legacy_asset( 0, MORPH_SYMBOL );
-
-      time_point_sec    created;
-      time_point_sec    last_updated;
 
       extensions_type extensions;
 
@@ -796,7 +780,7 @@ FC_REFLECT( morphene::protocol::recover_account_operation, (account_to_recover)(
 FC_REFLECT( morphene::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
 FC_REFLECT( morphene::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
 
-FC_REFLECT( morphene::protocol::create_auction_operation, (consigner)(title)(permlink)(image)(description)(status)(start_time)(end_time)(bids_count)(total_payout)(fee)(created)(last_updated)(extensions) );
-FC_REFLECT( morphene::protocol::update_auction_operation, (consigner)(title)(permlink)(image)(description)(status)(start_time)(end_time)(bids_count)(total_payout)(fee)(created)(last_updated)(extensions) );
+FC_REFLECT( morphene::protocol::create_auction_operation, (consigner)(permlink)(status)(start_time)(end_time)(fee) );
+FC_REFLECT( morphene::protocol::update_auction_operation, (consigner)(permlink)(status)(start_time)(end_time)(fee) );
 FC_REFLECT( morphene::protocol::delete_auction_operation, (consigner)(permlink) );
 FC_REFLECT( morphene::protocol::place_bid_operation, (bidder)(permlink) );

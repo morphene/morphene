@@ -1350,11 +1350,8 @@ void create_auction_evaluator::do_apply ( const create_auction_operation& op )
    FC_ASSERT( consigner.balance >= op.fee, "Insufficient balance to create auction.");
    _db.adjust_balance( op.consigner, -op.fee);
    _db.create< auction_object >( [&]( auction_object& w ) {
-      w.title = op.title;
-      w.permlink = op.permlink;
-      w.image = op.image;
       w.consigner = op.consigner;
-      w.description = op.description;
+      w.permlink = op.permlink;
       w.start_time = op.start_time;
       w.end_time = op.end_time;
       w.total_payout = op.fee;
@@ -1381,15 +1378,6 @@ void update_auction_evaluator::do_apply ( const update_auction_operation& op )
    }
    _db.modify( *auction, [&]( auction_object& obj )
    {
-      if( op.title.size() > 0 )
-         obj.title = op.title;
-      if( op.permlink.size() > 0 )
-         obj.permlink = op.permlink;
-      if( op.image.size() > 0 )
-         obj.image = op.image;
-      if( op.description.size() > 0 )
-         obj.description = op.description;
-
       obj.start_time = op.start_time;
       obj.end_time = op.end_time;
       obj.total_payout += fee_delta;

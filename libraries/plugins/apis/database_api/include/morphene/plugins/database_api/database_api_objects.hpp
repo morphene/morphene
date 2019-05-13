@@ -356,11 +356,8 @@ struct api_auction_object
   api_auction_object() {}
   api_auction_object( const chain::auction_object& c ) :
     id( c.id ),
-    title( c.title ),
-    permlink( c.permlink ),
-    image( c.image ),
     consigner( c.consigner ),
-    description( c.description ),
+    permlink( c.permlink ),
     status( c.status ),
     start_time( c.start_time ),
     end_time( c.end_time ),
@@ -376,11 +373,8 @@ struct api_auction_object
 
     auction_id_type         id;
 
-    string                  title;
-    string                  permlink;
-    string                  image;
     account_name_type       consigner;
-    string                  description;
+    string                  permlink;
     string                  status;
     time_point_sec          start_time;
     time_point_sec          end_time;
@@ -504,11 +498,8 @@ FC_REFLECT( morphene::plugins::database_api::broadcast_transaction_synchronous_r
 
 FC_REFLECT( morphene::plugins::database_api::api_auction_object, 
             (id)
-            (title)
-            (permlink)
-            (image)
             (consigner)
-            (description)
+            (permlink)
             (status)
             (start_time)
             (end_time)

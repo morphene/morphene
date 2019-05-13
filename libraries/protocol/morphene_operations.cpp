@@ -404,16 +404,13 @@ namespace morphene { namespace protocol {
    void create_auction_operation::validate()const
    {
       validate_account_name ( consigner );
-      FC_ASSERT( title.size() > 0, "Title is required" );
       FC_ASSERT( permlink.size() > 0, "Permlink is required" );
-      FC_ASSERT( description.size() <= MORPHENE_MAX_MEMO_SIZE, "Description field is too large (> 2048 bytes)" );
    }
 
    void update_auction_operation::validate()const
    {
       validate_account_name ( consigner );
       FC_ASSERT( permlink.size() > 0, "Permlink is required" );
-      FC_ASSERT( description.size() <= MORPHENE_MAX_MEMO_SIZE, "Description field is too large (> 2048 bytes)" );
    }
 
    void delete_auction_operation::validate()const

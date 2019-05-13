@@ -85,10 +85,7 @@ namespace morphene { namespace chain {
          id_type           id;
 
          account_name_type consigner;
-         string            title;
          string            permlink;
-         string            image;
-         string            description;
          string            status = "pending";
          time_point_sec    start_time = fc::time_point_sec::min();
          time_point_sec    end_time = fc::time_point_sec::maximum();
@@ -209,7 +206,7 @@ FC_REFLECT( morphene::chain::escrow_object,
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::escrow_object, morphene::chain::escrow_index )
 
 FC_REFLECT( morphene::chain::auction_object,
-             (id)(consigner)(title)(permlink)(image)(description)(status)
+             (id)(consigner)(permlink)(status)
              (start_time)(end_time)(bids_count)(total_payout)(fee)
              (created)(last_paid)(last_updated)(extensions) )
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::auction_object, morphene::chain::auction_index )
