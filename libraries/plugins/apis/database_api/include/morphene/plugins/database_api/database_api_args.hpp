@@ -37,11 +37,6 @@ enum sort_order_type
    by_account_expiration
 };
 
-/* get_config */
-
-typedef void_type          get_config_args;
-typedef fc::variant_object get_config_return;
-
 /* get_version */
 typedef void_type          get_version_args;
 struct get_version_return

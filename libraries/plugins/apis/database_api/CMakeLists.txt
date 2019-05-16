@@ -9,6 +9,7 @@ target_link_libraries(
   database_api_plugin
   chain_plugin
   json_rpc_plugin
+  block_api_plugin
   account_history_api_plugin
   network_broadcast_api_plugin
   morphene_utilities

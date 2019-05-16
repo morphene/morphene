@@ -657,12 +657,9 @@ namespace morphene { namespace protocol {
    {
       account_name_type consigner;
       string            permlink;
-      string            status = "pending";
       time_point_sec    start_time = fc::time_point_sec::min();
       time_point_sec    end_time = fc::time_point_sec::maximum();
       legacy_asset      fee = legacy_asset( 0, MORPH_SYMBOL );
-
-      extensions_type extensions;
 
       void              validate()const;
       void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( consigner ); }
@@ -675,12 +672,9 @@ namespace morphene { namespace protocol {
    {
       account_name_type consigner;
       string            permlink;
-      string            status = "pending";
       time_point_sec    start_time = fc::time_point_sec::min();
       time_point_sec    end_time = fc::time_point_sec::maximum();
       legacy_asset      fee = legacy_asset( 0, MORPH_SYMBOL );
-
-      extensions_type extensions;
 
       void              validate()const;
       void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( consigner ); }
@@ -780,7 +774,7 @@ FC_REFLECT( morphene::protocol::recover_account_operation, (account_to_recover)(
 FC_REFLECT( morphene::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
 FC_REFLECT( morphene::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
 
-FC_REFLECT( morphene::protocol::create_auction_operation, (consigner)(permlink)(status)(start_time)(end_time)(fee) );
-FC_REFLECT( morphene::protocol::update_auction_operation, (consigner)(permlink)(status)(start_time)(end_time)(fee) );
+FC_REFLECT( morphene::protocol::create_auction_operation, (consigner)(permlink)(start_time)(end_time)(fee) );
+FC_REFLECT( morphene::protocol::update_auction_operation, (consigner)(permlink)(start_time)(end_time)(fee) );
 FC_REFLECT( morphene::protocol::delete_auction_operation, (consigner)(permlink) );
 FC_REFLECT( morphene::protocol::place_bid_operation, (bidder)(permlink) );

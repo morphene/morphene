@@ -5,7 +5,14 @@
 #include <morphene/plugins/database_api/database_api_args.hpp>
 #include <morphene/plugins/database_api/database_api_objects.hpp>
 
+#include <morphene/plugins/network_broadcast_api/network_broadcast_api.hpp>
+#include <morphene/plugins/network_broadcast_api/network_broadcast_api_plugin.hpp>
+
+#include <morphene/plugins/block_api/block_api.hpp>
+#include <morphene/plugins/block_api/block_api_plugin.hpp>
+
 #include <morphene/plugins/account_history_api/account_history_api.hpp>
+#include <morphene/plugins/account_history_api/account_history_api_plugin.hpp>
 
 #define DATABASE_API_SINGLE_QUERY_LIMIT 1000
 
@@ -17,6 +24,10 @@ class database_api_impl;
 typedef arg_type api_name ## _args;                         \
 typedef return_type api_name ## _return;
 
+DEFINE_API_ARGS( get_block_header,                       vector< variant >,   optional< block_header > )
+DEFINE_API_ARGS( get_block,                              vector< variant >,   optional< signed_block > )
+DEFINE_API_ARGS( get_ops_in_block,                       vector< variant >,   vector< account_history::api_operation_object > )
+DEFINE_API_ARGS( get_config,                             vector< variant >,   fc::variant_object )
 DEFINE_API_ARGS( get_miner_queue,                        vector< variant >,   vector<account_name_type> )
 DEFINE_API_ARGS( get_state,                              vector< variant >,   state )
 DEFINE_API_ARGS( get_chain_properties,                   vector< variant >,   api_chain_properties )
@@ -49,6 +60,10 @@ class database_api
          /////////////
          // Globals //
          /////////////
+
+         (get_block_header)
+         (get_block)
+         (get_ops_in_block)
 
          /**
          * @brief Retrieve compile-time constants

@@ -17,7 +17,6 @@ namespace morphene { namespace chain {
    using morphene::protocol::legacy_asset;
    using morphene::protocol::price;
    using morphene::protocol::asset_symbol_type;
-   using morphene::protocol::extensions_type;
    using chainbase::t_deque;
 
    class escrow_object : public object< escrow_object_type, escrow_object >
@@ -96,8 +95,6 @@ namespace morphene { namespace chain {
          time_point_sec    created = fc::time_point_sec::min();
          time_point_sec    last_paid = fc::time_point_sec::min();
          time_point_sec    last_updated = fc::time_point_sec::min();
-
-         extensions_type extensions;
    };
 
    class bid_object : public object< bid_object_type, bid_object >
@@ -208,7 +205,7 @@ CHAINBASE_SET_INDEX_TYPE( morphene::chain::escrow_object, morphene::chain::escro
 FC_REFLECT( morphene::chain::auction_object,
              (id)(consigner)(permlink)(status)
              (start_time)(end_time)(bids_count)(total_payout)(fee)
-             (created)(last_paid)(last_updated)(extensions) )
+             (created)(last_paid)(last_updated) )
 CHAINBASE_SET_INDEX_TYPE( morphene::chain::auction_object, morphene::chain::auction_index )
 
 FC_REFLECT( morphene::chain::bid_object,

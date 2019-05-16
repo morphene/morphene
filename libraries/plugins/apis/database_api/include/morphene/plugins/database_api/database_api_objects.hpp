@@ -367,8 +367,7 @@ struct api_auction_object
     fee( c.fee ),
     created( c.created ),
     last_paid( c.last_paid ),
-    last_updated( c.last_updated ),
-    extensions( c.extensions )
+    last_updated( c.last_updated )
   {}
 
     auction_id_type         id;
@@ -385,7 +384,6 @@ struct api_auction_object
     time_point_sec          created;
     time_point_sec          last_paid;
     time_point_sec          last_updated;
-    extensions_type         extensions;
 };
 
 struct api_bid_object
@@ -510,7 +508,6 @@ FC_REFLECT( morphene::plugins::database_api::api_auction_object,
             (created)
             (last_paid)
             (last_updated)
-            (extensions)
           )
 
 FC_REFLECT( morphene::plugins::database_api::api_bid_object, 

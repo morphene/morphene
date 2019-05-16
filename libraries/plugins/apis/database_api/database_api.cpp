@@ -3,9 +3,6 @@
 #include <morphene/plugins/database_api/database_api.hpp>
 #include <morphene/plugins/database_api/database_api_plugin.hpp>
 
-#include <morphene/plugins/network_broadcast_api/network_broadcast_api.hpp>
-#include <morphene/plugins/network_broadcast_api/network_broadcast_api_plugin.hpp>
-
 #include <morphene/protocol/get_config.hpp>
 #include <morphene/protocol/exceptions.hpp>
 #include <morphene/protocol/transaction_util.hpp>
@@ -34,6 +31,9 @@ class database_api_impl
       (
          (get_config)
          (get_version)
+         (get_block_header)
+         (get_block)
+         (get_ops_in_block)
          (get_dynamic_global_properties)
          (get_witness_schedule)
          (get_hardfork_properties)
@@ -106,6 +106,8 @@ class database_api_impl
       chain::database& _db;
       std::shared_ptr< network_broadcast_api::network_broadcast_api >   _network_broadcast_api;
       p2p::p2p_plugin*                                                  _p2p = nullptr;
+      std::shared_ptr< block_api::block_api >                           _block_api;
+      std::shared_ptr< account_history::account_history_api >           _account_history_api;
 
       map< transaction_id_type, confirmation_callback >                 _callbacks;
       map< time_point_sec, vector< transaction_id_type > >              _callback_expirations;
@@ -195,6 +197,18 @@ void database_api::api_startup()
    {
       my->_p2p = p2p;
    }
+
+   auto block = appbase::app().find_plugin< block_api::block_api_plugin >();
+   if( block != nullptr )
+   {
+      my->_block_api = block->api;
+   }
+
+   auto account_history = appbase::app().find_plugin< account_history::account_history_api_plugin >();
+   if( account_history != nullptr )
+   {
+      my->_account_history_api = account_history->api;
+   }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -202,6 +216,50 @@ void database_api::api_startup()
 // Globals                                                          //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
+
+DEFINE_API_IMPL( database_api_impl, get_block_header )
+{
+   FC_ASSERT( _block_api, "block_api_plugin not enabled." );
+   return _block_api->get_block_header( { args[0].as< uint32_t >() } ).header;
+}
+
+DEFINE_API_IMPL( database_api_impl, get_block )
+{
+   FC_ASSERT( _block_api, "block_api_plugin not enabled." );
+   get_block_return result;
+   auto b = _block_api->get_block( { args[0].as< uint32_t >() } ).block;
+
+
+   if( b )
+   {
+      result = signed_block( *b );
+      // uint32_t n = uint32_t( b->transactions.size() );
+      // uint32_t block_num = block_header::num_from_id( b->block_id );
+      // for( uint32_t i=0; i<n; i++ )
+      // {
+      //    result->transactions[i].transaction_id = b->transactions[i].id();
+      //    result->transactions[i].block_num = block_num;
+      //    result->transactions[i].transaction_num = i;
+      // }
+   }
+
+   return result;
+}
+
+DEFINE_API_IMPL( database_api_impl, get_ops_in_block )
+{
+   FC_ASSERT( _account_history_api, "account_history_api_plugin not enabled." );
+
+   auto ops = _account_history_api->get_ops_in_block( { args[0].as< uint32_t >(), args[1].as< bool >() } ).ops;
+   get_ops_in_block_return result;
+
+   for( auto& op_obj : ops )
+   {
+      result.push_back( op_obj );
+   }
+
+   return result;
+}
 
 
 DEFINE_API_IMPL( database_api_impl, get_config )
@@ -1210,6 +1268,9 @@ DEFINE_LOCKLESS_APIS( database_api,
 )
 
 DEFINE_READ_APIS( database_api,
+   (get_block_header)
+   (get_block)
+   (get_ops_in_block)
    (get_dynamic_global_properties)
    (get_witness_schedule)
    (get_hardfork_properties)
