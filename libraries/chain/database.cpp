@@ -1511,10 +1511,13 @@ void database::process_subsidized_accounts()
 
 void database::process_auctions()
 {
-   const auto& auction_idx = get_index< auction_index >().indices().get< by_status >();
-   auto itr = auction_idx.begin();
-   while( itr != auction_idx.end() ) {
-      if( itr->status == "pending" && itr->start_time <= head_block_time() && itr->end_time >= head_block_time() )
+   const auto& auction_idx = get_index< auction_index >().indices().get< by_id >();
+   auto itr = auction_idx.rbegin();
+   while( itr != auction_idx.rend() ) {
+      if( itr->status == "pending" &&
+            itr->start_time != fc::time_point_sec::min() &&
+            itr->start_time <= head_block_time() &&
+            itr->end_time >= head_block_time() )
       {
          modify( *itr, [&]( auction_object& a )
          {
@@ -1528,40 +1531,31 @@ void database::process_auctions()
          {
             a.status = "ended";
             a.last_updated = head_block_time();
-         });
-      }
-      else if( itr->status == "ended" && itr->bids_count > 0 && itr->last_paid == fc::time_point_sec::min() )
-      {
-         auto consigner_payout = legacy_asset((itr->total_payout.amount * MORPHENE_CONSIGNER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
-         auto bidder_payout = legacy_asset((itr->total_payout.amount * MORPHENE_BIDDER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
-         operation consigner_vop = auction_payout_operation( itr->consigner, consigner_payout );
-         operation bidder_vop = auction_payout_operation( itr->last_bidder, bidder_payout );
-
-         adjust_balance( itr->consigner, consigner_payout );
-         adjust_balance( itr->last_bidder, bidder_payout );
-
-         modify( *itr, [&]( auction_object& a )
-         {
             a.last_paid = head_block_time();
-            a.last_updated = head_block_time();
+         });
+
+         if( itr->bids_count > 0 )
+         {
+            auto consigner_payout = legacy_asset((itr->total_payout.amount * MORPHENE_CONSIGNER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
+            auto bidder_payout = legacy_asset((itr->total_payout.amount * MORPHENE_BIDDER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
+            operation consigner_vop = auction_payout_operation( itr->consigner, consigner_payout );
+            operation bidder_vop = auction_payout_operation( itr->last_bidder, bidder_payout );
 
             pre_push_virtual_operation( consigner_vop );
             pre_push_virtual_operation( bidder_vop );
-         });  
 
-         post_push_virtual_operation( consigner_vop );
-         post_push_virtual_operation( bidder_vop );
-      }
-      else if( itr->status == "ended" && itr->last_paid == fc::time_point_sec::min() )
-      {
-         adjust_balance( itr->consigner, itr->total_payout );
+            adjust_balance( itr->consigner, consigner_payout );
+            adjust_balance( itr->last_bidder, bidder_payout );
 
-         modify( *itr, [&]( auction_object& a )
+            post_push_virtual_operation( consigner_vop );
+            post_push_virtual_operation( bidder_vop );
+         }
+         else
          {
-            a.last_paid = head_block_time();
-            a.last_updated = head_block_time();
-         });
+            adjust_balance( itr->consigner, itr->total_payout );
+         }
       }
+   
       ++itr;
    }
 }

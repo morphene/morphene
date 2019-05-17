@@ -164,12 +164,30 @@ namespace morphene { namespace chain {
 
    struct by_permlink;
    struct by_status;
+   struct by_status_start_time;
+   struct by_status_end_time;
    typedef multi_index_container<
       auction_object,
       indexed_by<
          ordered_unique< tag< by_id >, member< auction_object, auction_id_type, &auction_object::id > >,
          ordered_unique< tag< by_permlink >, member< auction_object, string, &auction_object::permlink > >,
-         ordered_non_unique< tag< by_status >, member< auction_object, string, &auction_object::status > >
+         ordered_non_unique< tag< by_status >, member< auction_object, string, &auction_object::status > >,
+         ordered_unique< tag< by_status_start_time >,
+            composite_key< auction_object,
+               member< auction_object, string, &auction_object::status >,
+               member< auction_object, time_point_sec, &auction_object::start_time >,
+               member< auction_object, auction_id_type, &auction_object::id >
+            >,
+            composite_key_compare< std::less< string >, std::less< time_point_sec >, std::less< auction_id_type > >
+         >,
+         ordered_unique< tag< by_status_end_time >,
+            composite_key< auction_object,
+               member< auction_object, string, &auction_object::status >,
+               member< auction_object, time_point_sec, &auction_object::end_time >,
+               member< auction_object, auction_id_type, &auction_object::id >
+            >,
+            composite_key_compare< std::less< string >, std::less< time_point_sec >, std::less< auction_id_type > >
+         >
       >,
       allocator< auction_object >
    > auction_index;

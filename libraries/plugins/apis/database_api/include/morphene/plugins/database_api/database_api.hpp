@@ -43,6 +43,8 @@ DEFINE_API_ARGS( get_witness_count,                      vector< variant >,   ui
 DEFINE_API_ARGS( broadcast_transaction,                  vector< variant >,   json_rpc::void_type )
 DEFINE_API_ARGS( get_auction,                            vector< variant >,   api_auction_object )
 DEFINE_API_ARGS( get_auctions_by_status,                 vector< variant >,   vector< api_auction_object > )
+DEFINE_API_ARGS( get_auctions_by_status_start_time,      vector< variant >,   vector< api_auction_object > )
+DEFINE_API_ARGS( get_auctions_by_status_end_time,        vector< variant >,   vector< api_auction_object > )
 DEFINE_API_ARGS( get_bids,                               vector< variant >,   vector< api_bid_object > )
 
 typedef vector< variant > get_account_history_args;
@@ -172,6 +174,8 @@ class database_api
          (broadcast_transaction_synchronous)
          (get_auction)
          (get_auctions_by_status)
+         (get_auctions_by_status_start_time)
+         (get_auctions_by_status_end_time)
          (get_bids)
       )
 

@@ -79,6 +79,8 @@ class database_api_impl
          (broadcast_transaction_synchronous)
          (get_auction)
          (get_auctions_by_status)
+         (get_auctions_by_status_start_time)
+         (get_auctions_by_status_end_time)
          (get_bids)
       )
 
@@ -1245,6 +1247,50 @@ DEFINE_API_IMPL( database_api_impl, get_auctions_by_status )
    return results;
 }
 
+DEFINE_API_IMPL( database_api_impl, get_auctions_by_status_start_time )
+{
+   vector< string > statuses = args[0].as< vector< string > >();
+   fc::time_point_sec start = args[1].as< fc::time_point_sec >();
+   uint32_t limit = args[2].as< uint32_t >();
+
+   const auto& auction_idx = _db.get_index<auction_index>().indices().get<by_status_start_time>();
+   vector< api_auction_object > results;
+
+   for( const auto& status: statuses )
+   {
+      auto itr = auction_idx.lower_bound(boost::make_tuple( status, start ));
+      auto itr_end = auction_idx.upper_bound(boost::make_tuple( status, fc::time_point_sec::maximum() ));
+      while( itr != itr_end && results.size() < limit)
+      {
+         results.push_back( *itr );
+         ++itr;
+      }
+   }
+   return results;
+}
+
+DEFINE_API_IMPL( database_api_impl, get_auctions_by_status_end_time )
+{
+   vector< string > statuses = args[0].as< vector< string > >();
+   fc::time_point_sec start = args[1].as< fc::time_point_sec >();
+   uint32_t limit = args[2].as< uint32_t >();
+
+   const auto& auction_idx = _db.get_index<auction_index>().indices().get<by_status_start_time>();
+   vector< api_auction_object > results;
+
+   for( const auto& status: statuses )
+   {
+      auto itr = auction_idx.lower_bound(boost::make_tuple( status, start ));
+      auto itr_end = auction_idx.upper_bound(boost::make_tuple( status, fc::time_point_sec::maximum() ));
+      while( itr != itr_end && results.size() < limit)
+      {
+         results.push_back( *itr );
+         ++itr;
+      }
+   }
+   return results;
+}
+
 DEFINE_API_IMPL( database_api_impl, get_bids )
 {
    vector< api_bid_object > result;
@@ -1314,6 +1360,8 @@ DEFINE_READ_APIS( database_api,
    (get_witness_count)
    (get_auction)
    (get_auctions_by_status)
+   (get_auctions_by_status_start_time)
+   (get_auctions_by_status_end_time)
    (get_bids)
 )
 
