@@ -31,7 +31,7 @@
 
 #define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 0) )
 
-#define MORPHENE_INIT_PUBLIC_KEY_STR              "MPH7rLx8tBP1cxc1tqjfw7GEExeFFyyfZPfhKz68dLXs4PSZTxNwZ"
+#define MORPHENE_INIT_PUBLIC_KEY_STR              "MPH61x2vqwM97bQr8yRNM8HZoVqJxC3sE1XVZ4xmAJdKC4jzAqu5o"
 #define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live"))
 #define MORPHENE_ADDRESS_PREFIX                   "MPH"
 

@@ -1,1 +1,1 @@
-seed.domain.com:2001          # example
+morphene.io:2001          # morphene.io

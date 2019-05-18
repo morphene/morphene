@@ -8,7 +8,7 @@ if [[ "$USE_WAY_TOO_MUCH_RAM" ]]; then
     MORPHENED="/usr/local/morphened-full/bin/morphened"
 fi
 
-chown -R morphened:morphened $HOME
+chown -R morphene:morphene $HOME
 
 ARGS=""
 
@@ -53,7 +53,7 @@ else
   cp /etc/morphened/config.ini $HOME/config.ini
 fi
 
-chown morphened:morphened $HOME/config.ini
+chown morphene:morphene $HOME/config.ini
 
 if [[ -e /var/cache/morphened/blocks.tbz2 ]]; then
     # init with blockchain cached in image
@@ -61,7 +61,7 @@ if [[ -e /var/cache/morphened/blocks.tbz2 ]]; then
     mkdir -p $HOME/blockchain/database
     cd $HOME/blockchain/database
     tar xvjpf /var/cache/morphened/blocks.tbz2
-    chown -R morphened:morphened $HOME/blockchain
+    chown -R morphene:morphene $HOME/blockchain
 fi
 
 # without --data-dir it uses cwd as datadir(!)
@@ -82,7 +82,7 @@ if [[ "$USE_NGINX_FRONTEND" ]]; then
     cp /etc/nginx/healthcheck.conf /etc/nginx/sites-enabled/default
     /etc/init.d/fcgiwrap restart
     service nginx restart
-    exec chpst -umorphened \
+    exec chpst -umorphene \
         $MORPHENED \
             --webserver-ws-endpoint=0.0.0.0:8091 \
             --webserver-http-endpoint=0.0.0.0:8091 \
@@ -92,7 +92,7 @@ if [[ "$USE_NGINX_FRONTEND" ]]; then
             $MORPHENED_EXTRA_OPTS \
             2>&1
 else
-    exec chpst -umorphened \
+    exec chpst -umorphene \
         $MORPHENED \
             --webserver-ws-endpoint=0.0.0.0:8090 \
             --webserver-http-endpoint=0.0.0.0:8090 \

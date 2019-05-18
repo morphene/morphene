@@ -10,7 +10,7 @@ else
   MORPHENED="/usr/local/morphened-full/bin/morphened"
 fi
 
-chown -R morphened:morphened $HOME
+chown -R morphene:morphene $HOME
 
 # clean out data dir since it may be semi-persistent block storage on the ec2 with stale data
 rm -rf $HOME/*
@@ -40,7 +40,7 @@ else
   cp /etc/morphened/fullnode.config.ini $HOME/config.ini
 fi
 
-chown morphened:morphened $HOME/config.ini
+chown morphene:morphene $HOME/config.ini
 
 cd $HOME
 
@@ -75,7 +75,7 @@ if [[ "$USE_RAMDISK" ]]; then
       finished=1
     fi
   done
-  chown -R morphened:morphened /mnt/ramdisk/blockchain
+  chown -R morphene:morphene /mnt/ramdisk/blockchain
 else
   while [[ $count -le 5 ]] && [[ $finished == 0 ]]
   do
@@ -104,7 +104,7 @@ if [[ $finished == 0 ]]; then
     echo notifymorphenedsync morphenedsync: shared memory file for $VERSION not found, creating a new one by replaying the blockchain
     if [[ "$USE_RAMDISK" ]]; then
       mkdir -p /mnt/ramdisk/blockchain
-      chown -R morphened:morphened /mnt/ramdisk/blockchain
+      chown -R morphene:morphene /mnt/ramdisk/blockchain
     else
       mkdir blockchain
     fi
@@ -125,7 +125,7 @@ if [[ "$SYNC_TO_S3" ]]; then
   chown www-data:www-data /tmp/issyncnode
 fi
 
-chown -R morphened:morphened $HOME/*
+chown -R morphene:morphene $HOME/*
 
 # let's get going
 cp /etc/nginx/healthcheck.conf.template /etc/nginx/healthcheck.conf
@@ -135,7 +135,7 @@ rm /etc/nginx/sites-enabled/default
 cp /etc/nginx/healthcheck.conf /etc/nginx/sites-enabled/default
 /etc/init.d/fcgiwrap restart
 service nginx restart
-exec chpst -umorphened \
+exec chpst -morphene \
     $MORPHENED \
         --webserver-ws-endpoint=127.0.0.1:8091 \
         --webserver-http-endpoint=127.0.0.1:8091 \
