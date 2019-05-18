@@ -31,7 +31,7 @@
 #else
 
 #define VESTS_SYMBOL_U64  (uint64_t('V') | (uint64_t('E') << 8) | (uint64_t('S') << 16) | (uint64_t('T') << 24) | (uint64_t('S') << 32))
-#define MORPH_SYMBOL_U64  (uint64_t('S') | (uint64_t('T') << 8) | (uint64_t('E') << 16) | (uint64_t('E') << 24) | (uint64_t('M') << 32))
+#define MORPH_SYMBOL_U64  (uint64_t('M') | (uint64_t('O') << 8) | (uint64_t('R') << 16) | (uint64_t('P') << 24) | (uint64_t('H') << 32))
 
 #endif
 

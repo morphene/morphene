@@ -13,7 +13,7 @@
 
 #define MORPHENE_INIT_PRIVATE_KEY                 (fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key"))))
 #define MORPHENE_INIT_PUBLIC_KEY_STR              (std::string( morphene::protocol::public_key_type(MORPHENE_INIT_PRIVATE_KEY.get_public_key()) ))
-#define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-test"))
+#define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-test")) // 720fc3f4eb2480c104539739bd9cb84db9e92c3a63cdf78254887d5ac2978a2f
 #define MORPHENE_ADDRESS_PREFIX                   "TST"
 
 #define MORPHENE_MIN_ACCOUNT_CREATION_FEE         int64_t(1000)
@@ -32,7 +32,7 @@
 #define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 0) )
 
 #define MORPHENE_INIT_PUBLIC_KEY_STR              "MPH61x2vqwM97bQr8yRNM8HZoVqJxC3sE1XVZ4xmAJdKC4jzAqu5o"
-#define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live"))
+#define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live")) // f6f3128028d95bdc9cd47c3b27e3ebae4bee456bc3ce11d37492b828de2e2f59
 #define MORPHENE_ADDRESS_PREFIX                   "MPH"
 
 #define MORPHENE_MIN_ACCOUNT_CREATION_FEE         1
@@ -40,7 +40,7 @@
 
 #define MORPHENE_OWNER_UPDATE_LIMIT               fc::minutes(60)
 
-#define MORPHENE_INIT_SUPPLY                      int64_t(0)
+#define MORPHENE_INIT_SUPPLY                      (int64_t( 100000000 ) * int64_t( 1000 ))
 #define MORPHENE_RECENT_CLAIMS									  (fc::uint128_t(uint64_t(1000000000000ull)))
 
 #endif
