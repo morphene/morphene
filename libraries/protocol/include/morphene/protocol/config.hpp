@@ -21,7 +21,7 @@
 
 #define MORPHENE_OWNER_UPDATE_LIMIT               fc::seconds(0)
 
-#define MORPHENE_INIT_SUPPLY                      (int64_t( 10000000 ) * int64_t( 1000 ))
+#define MORPHENE_INIT_SUPPLY                      (int64_t( 1000000000 ) * int64_t( 1000 ))
 #define MORPHENE_RECENT_CLAIMS									  (fc::uint128_t(uint64_t(0ull)))
 
 /// Allows to limit number of total produced blocks.
@@ -40,7 +40,7 @@
 
 #define MORPHENE_OWNER_UPDATE_LIMIT               fc::minutes(60)
 
-#define MORPHENE_INIT_SUPPLY                      (int64_t( 100000000 ) * int64_t( 1000 ))
+#define MORPHENE_INIT_SUPPLY                      (int64_t( 1000000000 ) * int64_t( 1000 ))
 #define MORPHENE_RECENT_CLAIMS									  (fc::uint128_t(uint64_t(1000000000000ull)))
 
 #endif
