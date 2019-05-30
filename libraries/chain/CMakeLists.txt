@@ -15,8 +15,6 @@ add_library( morphene_chain
              shared_authority.cpp
              block_log.cpp
 
-             generic_custom_operation_interpreter.cpp
-
              util/rd.cpp
              util/reward.cpp
              util/impacted.cpp

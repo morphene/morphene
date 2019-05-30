@@ -32,7 +32,6 @@
 
 #include <morphene/chain/database.hpp>
 #include <morphene/chain/index.hpp>
-#include <morphene/chain/generic_custom_operation_interpreter.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -54,18 +53,12 @@ class private_message_plugin_impl
       }
 
       private_message_plugin&                                                             _self;
-      std::shared_ptr< generic_custom_operation_interpreter< morphene::private_message::private_message_plugin_operation > >   _custom_operation_interpreter;
       flat_map<string,string>                                                             _tracked_accounts;
 };
 
 private_message_plugin_impl::private_message_plugin_impl( private_message_plugin& _plugin )
    : _self( _plugin )
 {
-   _custom_operation_interpreter = std::make_shared< generic_custom_operation_interpreter< morphene::private_message::private_message_plugin_operation > >( database() );
-
-   _custom_operation_interpreter->register_evaluator< private_message_evaluator >( &_self );
-
-   database().set_custom_operation_interpreter( _self.plugin_name(), _custom_operation_interpreter );
    return;
 }
 

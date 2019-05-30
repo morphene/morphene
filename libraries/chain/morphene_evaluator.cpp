@@ -1,6 +1,5 @@
 #include <morphene/chain/morphene_evaluator.hpp>
 #include <morphene/chain/database.hpp>
-#include <morphene/chain/custom_operation_interpreter.hpp>
 #include <morphene/chain/morphene_objects.hpp>
 #include <morphene/chain/witness_objects.hpp>
 #include <morphene/chain/block_summary_object.hpp>
@@ -802,81 +801,6 @@ void account_witness_vote_evaluator::do_apply( const account_witness_vote_operat
          a.witnesses_voted_for--;
       });
       _db.remove( *itr );
-   }
-}
-
-void custom_evaluator::do_apply( const custom_operation& o )
-{
-   database& d = db();
-   if( d.is_producing() )
-      FC_ASSERT( o.data.size() <= 8192, "custom_operation must be less than 8k" );
-
-   FC_ASSERT( o.required_auths.size() <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Too many auths specified. Max: ${m}, Current: ${n}", ("m",MORPHENE_MAX_AUTHORITY_MEMBERSHIP)("n", o.required_auths.size()) );
-}
-
-void custom_json_evaluator::do_apply( const custom_json_operation& o )
-{
-   database& d = db();
-
-   if( d.is_producing() )
-      FC_ASSERT( o.json.length() <= 8192, "custom_json_operation json must be less than 8k" );
-
-   size_t num_auths = o.required_auths.size() + o.required_posting_auths.size();
-   FC_ASSERT( num_auths <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Too many auths specified. Max: ${m}, Current: ${n}", ("m",MORPHENE_MAX_AUTHORITY_MEMBERSHIP)("n", num_auths) );
-
-   std::shared_ptr< custom_operation_interpreter > eval = d.get_custom_json_evaluator( o.id );
-   if( !eval )
-      return;
-
-   try
-   {
-      eval->apply( o );
-   }
-   catch( const fc::exception& e )
-   {
-      if( d.is_producing() )
-         throw e;
-   }
-   catch(...)
-   {
-      elog( "Unexpected exception applying custom json evaluator." );
-   }
-}
-
-
-void custom_binary_evaluator::do_apply( const custom_binary_operation& o )
-{
-   database& d = db();
-   if( d.is_producing() )
-   {
-      FC_ASSERT( o.data.size() <= 8192, "custom_binary_operation data must be less than 8k" );
-      FC_ASSERT( false, "custom_binary_operation is deprecated" );
-   }
-
-   size_t num_auths = o.required_owner_auths.size() + o.required_active_auths.size() + o.required_posting_auths.size();
-   for( const auto& auth : o.required_auths )
-   {
-      num_auths += auth.key_auths.size() + auth.account_auths.size();
-   }
-
-   FC_ASSERT( num_auths <= MORPHENE_MAX_AUTHORITY_MEMBERSHIP, "Too many auths specified. Max: 10, Current: ${n}", ("n", num_auths) );
-
-   std::shared_ptr< custom_operation_interpreter > eval = d.get_custom_json_evaluator( o.id );
-   if( !eval )
-      return;
-
-   try
-   {
-      eval->apply( o );
-   }
-   catch( const fc::exception& e )
-   {
-      if( d.is_producing() )
-         throw e;
-   }
-   catch(...)
-   {
-      elog( "Unexpected exception applying custom json evaluator." );
    }
 }
 

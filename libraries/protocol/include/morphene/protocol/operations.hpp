@@ -23,10 +23,6 @@ namespace morphene { namespace protocol {
             account_witness_vote_operation,
             account_witness_proxy_operation,
 
-            custom_operation,
-            custom_json_operation,
-            custom_binary_operation,
-
             pow_operation,
 
             set_withdraw_vesting_route_operation,

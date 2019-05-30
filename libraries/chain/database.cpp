@@ -2,7 +2,6 @@
 
 #include <morphene/chain/block_summary_object.hpp>
 #include <morphene/chain/compound.hpp>
-#include <morphene/chain/custom_operation_interpreter.hpp>
 #include <morphene/chain/database.hpp>
 #include <morphene/chain/database_exceptions.hpp>
 #include <morphene/chain/db_with.hpp>
@@ -56,14 +55,13 @@ struct db_schema
    std::map< std::string, std::string > types;
    std::vector< object_schema_repr > object_types;
    std::string operation_type;
-   std::vector< operation_schema_repr > custom_operation_types;
 };
 
 } }
 
 FC_REFLECT( morphene::chain::object_schema_repr, (space_type)(type) )
 FC_REFLECT( morphene::chain::operation_schema_repr, (id)(type) )
-FC_REFLECT( morphene::chain::db_schema, (types)(object_types)(operation_type)(custom_operation_types) )
+FC_REFLECT( morphene::chain::db_schema, (types)(object_types)(operation_type) )
 
 namespace morphene { namespace chain {
 
@@ -1651,9 +1649,6 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< witness_update_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< account_witness_vote_evaluator           >();
    _my->_evaluator_registry.register_evaluator< account_witness_proxy_evaluator          >();
-   _my->_evaluator_registry.register_evaluator< custom_evaluator                         >();
-   _my->_evaluator_registry.register_evaluator< custom_binary_evaluator                  >();
-   _my->_evaluator_registry.register_evaluator< custom_json_evaluator                    >();
    _my->_evaluator_registry.register_evaluator< pow_evaluator                            >();
    _my->_evaluator_registry.register_evaluator< claim_account_evaluator                  >();
    _my->_evaluator_registry.register_evaluator< create_claimed_account_evaluator         >();
@@ -1673,22 +1668,6 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< update_auction_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< delete_auction_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< place_bid_evaluator                      >();
-}
-
-
-void database::set_custom_operation_interpreter( const std::string& id, std::shared_ptr< custom_operation_interpreter > registry )
-{
-   bool inserted = _custom_operation_interpreters.emplace( id, registry ).second;
-   // This assert triggering means we're mis-configured (multiple registrations of custom JSON evaluator for same ID)
-   FC_ASSERT( inserted );
-}
-
-std::shared_ptr< custom_operation_interpreter > database::get_custom_json_evaluator( const std::string& id )
-{
-   auto it = _custom_operation_interpreters.find( id );
-   if( it != _custom_operation_interpreters.end() )
-      return it->second;
-   return std::shared_ptr< custom_operation_interpreter >();
 }
 
 void database::initialize_indexes()

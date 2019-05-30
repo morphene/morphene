@@ -85,8 +85,6 @@ namespace detail {
       chain::legacy_chain_properties                                        _miner_prop_vote;
       boost::asio::deadline_timer                                           _timer;
 
-      std::set< morphene::protocol::account_name_type >                     _dupe_customs;
-
       plugins::chain::chain_plugin& _chain_plugin;
       chain::database&              _db;
       boost::signals2::connection   _pre_apply_block_conn;
@@ -171,7 +169,7 @@ namespace detail {
 
    void witness_plugin_impl::on_pre_apply_block( const chain::block_notification& b )
    {
-      _dupe_customs.clear();
+      return;
    }
 
    void witness_plugin_impl::on_pre_apply_operation( const chain::operation_notification& note )
@@ -186,20 +184,6 @@ namespace detail {
    {
       switch( note.op.which() )
       {
-         case operation::tag< custom_operation >::value:
-         case operation::tag< custom_json_operation >::value:
-         case operation::tag< custom_binary_operation >::value:
-         {
-            flat_set< account_name_type > impacted;
-            app::operation_get_impacted_accounts( note.op, impacted );
-
-            for( auto& account : impacted )
-               if( _db.is_producing() )
-                  MORPHENE_ASSERT( _dupe_customs.insert( account ).second, plugin_exception,
-                     "Account ${a} already submitted a custom json operation this block.",
-                     ("a", account) );
-         }
-            break;
          default:
             break;
       }
@@ -207,7 +191,7 @@ namespace detail {
 
    void witness_plugin_impl::on_post_apply_block( const block_notification& note )
    {
-      _dupe_customs.clear();
+      return;
    }
 
    void witness_plugin_impl::schedule_production_loop() {

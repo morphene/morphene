@@ -22,8 +22,6 @@
 #define STATE_TRANSACTION_BYTE_SIZE               174
 #define STATE_LIMIT_ORDER_BYTE_SIZE              1940
 
-#define EXEC_FOLLOW_CUSTOM_OP_SCALE                20
-
 namespace morphene { namespace plugins { namespace rc {
 
 struct state_object_size_info
@@ -74,9 +72,6 @@ struct operation_exec_info
    int64_t change_recovery_account_operation_exec_time         =  12000;
    int64_t claim_account_operation_exec_time                   =  10000;
    int64_t create_claimed_account_operation_exec_time          =  57700;
-   int64_t custom_operation_exec_time                          =  11400;
-   int64_t custom_json_operation_exec_time                     =  11400;
-   int64_t custom_binary_operation_exec_time                   =  11400;
    int64_t delegate_vesting_shares_operation_exec_time         =  19900;
    int64_t escrow_approve_operation_exec_time                  =   9900;
    int64_t escrow_dispute_operation_exec_time                  =  11500;
@@ -120,9 +115,6 @@ FC_REFLECT( morphene::plugins::rc::operation_exec_info,
    ( change_recovery_account_operation_exec_time )
    ( claim_account_operation_exec_time )
    ( create_claimed_account_operation_exec_time )
-   ( custom_operation_exec_time )
-   ( custom_json_operation_exec_time )
-   ( custom_binary_operation_exec_time )
    ( delegate_vesting_shares_operation_exec_time )
    ( escrow_approve_operation_exec_time )
    ( escrow_dispute_operation_exec_time )

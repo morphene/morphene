@@ -147,35 +147,6 @@ struct count_operation_visitor
       }
    }
 
-   void operator()( const custom_operation& )const
-   {
-      execution_time_count += _e.custom_operation_exec_time;
-   }
-
-   void operator()( const custom_json_operation& o )const
-   {
-      auto exec_time = _e.custom_operation_exec_time;
-
-      if( o.id == "follow" )
-      {
-         exec_time *= EXEC_FOLLOW_CUSTOM_OP_SCALE;
-      }
-
-      execution_time_count += exec_time;
-   }
-
-   void operator()( const custom_binary_operation& o )const
-   {
-      auto exec_time = _e.custom_operation_exec_time;
-
-      if( o.id == "follow" )
-      {
-         exec_time *= EXEC_FOLLOW_CUSTOM_OP_SCALE;
-      }
-
-      execution_time_count += exec_time;
-   }
-
    void operator()( const escrow_approve_operation& )const
    {
       execution_time_count += _e.escrow_approve_operation_exec_time;

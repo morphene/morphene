@@ -375,56 +375,6 @@ namespace morphene { namespace protocol {
    };
 
 
-   /**
-    * @brief provides a generic way to add higher level protocols on top of witness consensus
-    * @ingroup operations
-    *
-    * There is no validation for this operation other than that required auths are valid
-    */
-   struct custom_operation : public base_operation
-   {
-      flat_set< account_name_type > required_auths;
-      uint16_t                      id = 0;
-      vector< char >                data;
-
-      void validate()const;
-      void get_required_active_authorities( flat_set<account_name_type>& a )const{ for( const auto& i : required_auths ) a.insert(i); }
-   };
-
-
-   /** serves the same purpose as custom_operation but also supports required posting authorities. Unlike custom_operation,
-    * this operation is designed to be human readable/developer friendly.
-    **/
-   struct custom_json_operation : public base_operation
-   {
-      flat_set< account_name_type > required_auths;
-      flat_set< account_name_type > required_posting_auths;
-      string                        id; ///< must be less than 32 characters long
-      string                        json; ///< must be proper utf8 / JSON string.
-
-      void validate()const;
-      void get_required_active_authorities( flat_set<account_name_type>& a )const{ for( const auto& i : required_auths ) a.insert(i); }
-      void get_required_posting_authorities( flat_set<account_name_type>& a )const{ for( const auto& i : required_posting_auths ) a.insert(i); }
-   };
-
-
-   struct custom_binary_operation : public base_operation
-   {
-      flat_set< account_name_type > required_owner_auths;
-      flat_set< account_name_type > required_active_auths;
-      flat_set< account_name_type > required_posting_auths;
-      vector< authority >           required_auths;
-
-      string                        id; ///< must be less than 32 characters long
-      vector< char >                data;
-
-      void validate()const;
-      void get_required_owner_authorities( flat_set<account_name_type>& a )const{ for( const auto& i : required_owner_auths ) a.insert(i); }
-      void get_required_active_authorities( flat_set<account_name_type>& a )const{ for( const auto& i : required_active_auths ) a.insert(i); }
-      void get_required_posting_authorities( flat_set<account_name_type>& a )const{ for( const auto& i : required_posting_auths ) a.insert(i); }
-      void get_required_authorities( vector< authority >& a )const{ for( const auto& i : required_auths ) a.push_back( i ); }
-   };
-
    struct pow_input
    {
       account_name_type worker_account;
@@ -753,9 +703,6 @@ FC_REFLECT( morphene::protocol::witness_update_operation, (owner)(url)(block_sig
 FC_REFLECT( morphene::protocol::witness_set_properties_operation, (owner)(props)(extensions) )
 FC_REFLECT( morphene::protocol::account_witness_vote_operation, (account)(witness)(approve) )
 FC_REFLECT( morphene::protocol::account_witness_proxy_operation, (account)(proxy) )
-FC_REFLECT( morphene::protocol::custom_operation, (required_auths)(id)(data) )
-FC_REFLECT( morphene::protocol::custom_json_operation, (required_auths)(required_posting_auths)(id)(json) )
-FC_REFLECT( morphene::protocol::custom_binary_operation, (required_owner_auths)(required_active_auths)(required_posting_auths)(required_auths)(id)(data) )
 
 FC_REFLECT( morphene::protocol::pow, (input)(pow_summary) )
 FC_REFLECT( morphene::protocol::pow_input, (worker_account)(prev_block)(nonce) )

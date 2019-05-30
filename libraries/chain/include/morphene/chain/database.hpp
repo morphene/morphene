@@ -34,7 +34,6 @@ namespace morphene { namespace chain {
    using abstract_plugin = appbase::abstract_plugin;
 
    class database_impl;
-   class custom_operation_interpreter;
 
    namespace util {
       class advanced_benchmark_dumper;
@@ -352,8 +351,6 @@ namespace morphene { namespace chain {
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();
-         void set_custom_operation_interpreter( const std::string& id, std::shared_ptr< custom_operation_interpreter > registry );
-         std::shared_ptr< custom_operation_interpreter > get_custom_json_evaluator( const std::string& id );
 
          /// Reset the object graph in-memory
          void initialize_indexes();
@@ -477,7 +474,6 @@ namespace morphene { namespace chain {
          uint16_t                      _shared_file_full_threshold = 0;
          uint16_t                      _shared_file_scale_rate = 0;
 
-         flat_map< std::string, std::shared_ptr< custom_operation_interpreter > >   _custom_operation_interpreters;
          std::string                   _json_schema;
 
          util::advanced_benchmark_dumper  _benchmark_dumper;
