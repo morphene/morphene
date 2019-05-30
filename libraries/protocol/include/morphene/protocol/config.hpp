@@ -22,7 +22,6 @@
 #define MORPHENE_OWNER_UPDATE_LIMIT               fc::seconds(0)
 
 #define MORPHENE_INIT_SUPPLY                      (int64_t( 1000000000 ) * int64_t( 1000 ))
-#define MORPHENE_RECENT_CLAIMS									  (fc::uint128_t(uint64_t(0ull)))
 
 /// Allows to limit number of total produced blocks.
 #define TESTNET_BLOCK_LIMIT                   		(3000000)
@@ -35,13 +34,12 @@
 #define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live")) // f6f3128028d95bdc9cd47c3b27e3ebae4bee456bc3ce11d37492b828de2e2f59
 #define MORPHENE_ADDRESS_PREFIX                   "MPH"
 
-#define MORPHENE_MIN_ACCOUNT_CREATION_FEE         1
+#define MORPHENE_MIN_ACCOUNT_CREATION_FEE         int64_t(1000)
 #define MORPHENE_MAX_ACCOUNT_CREATION_FEE         int64_t(1000000000)
 
 #define MORPHENE_OWNER_UPDATE_LIMIT               fc::minutes(60)
 
 #define MORPHENE_INIT_SUPPLY                      (int64_t( 1000000000 ) * int64_t( 1000 ))
-#define MORPHENE_RECENT_CLAIMS									  (fc::uint128_t(uint64_t(1000000000000ull)))
 
 #endif
 
