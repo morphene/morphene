@@ -64,10 +64,17 @@ namespace morphene { namespace protocol {
    struct auction_payout_operation : public virtual_operation
    {
       auction_payout_operation(){}
-      auction_payout_operation( const string& a, const legacy_asset& p ) : account( a ), payout( p ) {}
+      auction_payout_operation(
+         const string& a,
+         const string& p,
+         const legacy_asset& y,
+         const string& t  )
+      : account( a ), permlink( p ), payout( y ), type( t ) {}
 
       account_name_type   account;
+      string              permlink;
       legacy_asset        payout;
+      string              type;
    };
 
 } } //morphene::protocol
@@ -78,4 +85,4 @@ FC_REFLECT( morphene::protocol::hardfork_operation, (hardfork_id) )
 FC_REFLECT( morphene::protocol::return_vesting_delegation_operation, (account)(vesting_shares) )
 FC_REFLECT( morphene::protocol::producer_reward_operation, (producer)(vesting_shares) )
 FC_REFLECT( morphene::protocol::clear_null_account_balance_operation, (total_cleared) )
-FC_REFLECT( morphene::protocol::auction_payout_operation, (account)(payout) )
+FC_REFLECT( morphene::protocol::auction_payout_operation, (account)(permlink)(payout)(type) )

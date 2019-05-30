@@ -1538,8 +1538,8 @@ void database::process_auctions()
          {
             auto consigner_payout = legacy_asset((itr->total_payout.amount * MORPHENE_CONSIGNER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
             auto bidder_payout = legacy_asset((itr->total_payout.amount * MORPHENE_BIDDER_PAYOUT_PERCENT)/MORPHENE_100_PERCENT, MORPH_SYMBOL);
-            operation consigner_vop = auction_payout_operation( itr->consigner, consigner_payout );
-            operation bidder_vop = auction_payout_operation( itr->last_bidder, bidder_payout );
+            operation consigner_vop = auction_payout_operation( itr->consigner, itr->permlink, consigner_payout, "consigner" );
+            operation bidder_vop = auction_payout_operation( itr->last_bidder, itr->permlink, bidder_payout, "bidder" );
 
             pre_push_virtual_operation( consigner_vop );
             pre_push_virtual_operation( bidder_vop );

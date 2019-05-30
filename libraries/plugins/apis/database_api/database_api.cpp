@@ -43,6 +43,7 @@ class database_api_impl
          (get_active_witnesses)
          (list_accounts)
          (find_accounts)
+         (lookup_accounts)
          (list_owner_histories)
          (find_owner_histories)
          (list_account_recovery_requests)
@@ -494,6 +495,25 @@ DEFINE_API_IMPL( database_api_impl, find_accounts )
       auto acct = _db.find< chain::account_object, chain::by_name >( a );
       if( acct != nullptr )
          result.accounts.push_back( api_account_object( *acct, _db ) );
+   }
+
+   return result;
+}
+
+DEFINE_API_IMPL( database_api_impl, lookup_accounts )
+{
+   account_name_type lower_bound_name = args[0].as< account_name_type >();
+   uint32_t limit = args[1].as< uint32_t >();
+
+   FC_ASSERT( limit <= 1000 );
+   const auto& accounts_by_name = _db.get_index< chain::account_index, chain::by_name >();
+   set<string> result;
+
+   for( auto itr = accounts_by_name.lower_bound( lower_bound_name );
+        limit-- && itr != accounts_by_name.end();
+        ++itr )
+   {
+      result.insert( itr->name );
    }
 
    return result;
@@ -1387,6 +1407,7 @@ DEFINE_READ_APIS( database_api,
    (get_active_witnesses)
    (list_accounts)
    (find_accounts)
+   (lookup_accounts)
    (list_owner_histories)
    (find_owner_histories)
    (list_account_recovery_requests)
