@@ -37,6 +37,7 @@ class database_api_impl
          (get_dynamic_global_properties)
          (get_witness_schedule)
          (get_hardfork_properties)
+         (get_hardfork_version)
          (list_witnesses)
          (find_witnesses)
          (list_witness_votes)
@@ -44,6 +45,8 @@ class database_api_impl
          (list_accounts)
          (find_accounts)
          (lookup_accounts)
+         (lookup_account_names)
+         (lookup_witness_accounts)
          (list_owner_histories)
          (find_owner_histories)
          (list_account_recovery_requests)
@@ -59,6 +62,8 @@ class database_api_impl
          (find_vesting_delegations)
          (list_vesting_delegation_expirations)
          (find_vesting_delegation_expirations)
+         (get_vesting_delegations)
+         (get_expiring_vesting_delegations)
          (get_transaction_hex)
          (get_required_signatures)
          (get_potential_signatures)
@@ -298,6 +303,11 @@ DEFINE_API_IMPL( database_api_impl, get_hardfork_properties )
    return _db.get_hardfork_property_object();
 }
 
+DEFINE_API_IMPL( database_api_impl, get_hardfork_version )
+{
+   return get_hardfork_properties( {} ).current_hardfork_version;
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Witnesses                                                        //
@@ -519,6 +529,88 @@ DEFINE_API_IMPL( database_api_impl, lookup_accounts )
    return result;
 }
 
+DEFINE_API_IMPL( database_api_impl, lookup_account_names )
+{
+   vector< account_name_type > account_names = args[0].as< vector< account_name_type > >();
+
+   vector< optional< api_account_object > > result;
+   result.reserve( account_names.size() );
+
+   for( auto& name : account_names )
+   {
+      auto itr = _db.find< account_object, chain::by_name >( name );
+
+      if( itr )
+      {
+         result.push_back( api_account_object( api_account_object( *itr, _db ) ) );
+      }
+      else
+      {
+         result.push_back( optional< api_account_object >() );
+      }
+   }
+
+   return result;
+}
+
+DEFINE_API_IMPL( database_api_impl, lookup_witness_accounts )
+{
+   auto limit = args[1].as< uint32_t >();
+
+   lookup_witness_accounts_return result;
+
+   list_witnesses_args argObj;
+   argObj.start = args[0].as< vector< variant > >();
+   argObj.limit = limit;
+   argObj.order = by_name;
+
+   auto witnesses = list_witnesses( argObj ).witnesses;
+
+   for( auto& w : witnesses )
+   {
+      result.push_back( w.owner );
+   }
+
+   return result;
+}
+
+DEFINE_API_IMPL( database_api_impl, get_vesting_delegations )
+{
+   list_vesting_delegations_args a;
+   account_name_type account = args[0].as< account_name_type >();
+   a.start = fc::variant( (vector< variant >){ args[0], args[1] } );
+   a.limit = args.size() == 3 ? args[2].as< uint32_t >() : 100;
+   a.order = by_delegation;
+
+   auto delegations = list_vesting_delegations( a ).delegations;
+   get_vesting_delegations_return result;
+
+   for( auto itr = delegations.begin(); itr != delegations.end() && itr->delegator == account; ++itr )
+   {
+      result.push_back( api_vesting_delegation_object( *itr ) );
+   }
+
+   return result;
+}
+
+DEFINE_API_IMPL( database_api_impl, get_expiring_vesting_delegations )
+{
+   list_vesting_delegation_expirations_args a;
+   account_name_type account = args[0].as< account_name_type >();
+   a.start = fc::variant( (vector< variant >){ args[0], args[1], fc::variant( vesting_delegation_expiration_id_type() ) } );
+   a.limit = args.size() == 3 ? args[2].as< uint32_t >() : 100;
+   a.order = by_account_expiration;
+
+   auto delegations = list_vesting_delegation_expirations( a ).delegations;
+   get_expiring_vesting_delegations_return result;
+
+   for( auto itr = delegations.begin(); itr != delegations.end() && itr->delegator == account; ++itr )
+   {
+      result.push_back( api_vesting_delegation_expiration_object( *itr ) );
+   }
+
+   return result;
+}
 
 /* Owner Auth Histories */
 
@@ -1401,6 +1493,7 @@ DEFINE_READ_APIS( database_api,
    (get_dynamic_global_properties)
    (get_witness_schedule)
    (get_hardfork_properties)
+   (get_hardfork_version)
    (list_witnesses)
    (find_witnesses)
    (list_witness_votes)
@@ -1408,6 +1501,8 @@ DEFINE_READ_APIS( database_api,
    (list_accounts)
    (find_accounts)
    (lookup_accounts)
+   (lookup_account_names)
+   (lookup_witness_accounts)
    (list_owner_histories)
    (find_owner_histories)
    (list_account_recovery_requests)
@@ -1423,6 +1518,8 @@ DEFINE_READ_APIS( database_api,
    (find_vesting_delegations)
    (list_vesting_delegation_expirations)
    (find_vesting_delegation_expirations)
+   (get_vesting_delegations)
+   (get_expiring_vesting_delegations)
    (get_transaction_hex)
    (get_required_signatures)
    (get_potential_signatures)
