@@ -51,6 +51,7 @@ class database_api_impl
          (find_change_recovery_account_requests)
          (list_escrows)
          (find_escrows)
+         (get_withdraw_routes)
          (list_withdraw_vesting_routes)
          (find_withdraw_vesting_routes)
          (list_vesting_delegations)
@@ -73,6 +74,7 @@ class database_api_impl
          (get_owner_history)
          (get_recovery_request)
          (get_witnesses)
+         (get_witnesses_by_vote)
          (get_witness_by_account)
          (get_witness_count)
          (broadcast_transaction)
@@ -697,7 +699,6 @@ DEFINE_API_IMPL( database_api_impl, find_escrows )
    return result;
 }
 
-
 /* Withdraw Vesting Routes */
 
 DEFINE_API_IMPL( database_api_impl, list_withdraw_vesting_routes )
@@ -775,6 +776,32 @@ DEFINE_API_IMPL( database_api_impl, find_withdraw_vesting_routes )
    return result;
 }
 
+DEFINE_API_IMPL( database_api_impl, get_withdraw_routes )
+{
+   auto account = args[0].as< string >();
+   auto destination = args.size() == 2 ? args[1].as< withdraw_route_type >() : outgoing;
+
+   find_withdraw_vesting_routes_args argObj;
+   argObj.account = account;
+
+   get_withdraw_routes_return result;
+
+   if( destination == outgoing || destination == all )
+   {
+      argObj.order = by_withdraw_route;
+      auto routes = find_withdraw_vesting_routes( argObj ).routes;
+      result.insert( result.end(), routes.begin(), routes.end() );
+   }
+
+   if( destination == incoming || destination == all )
+   {
+      argObj.order = by_destination;
+      auto routes = find_withdraw_vesting_routes( argObj ).routes;
+      result.insert( result.end(), routes.begin(), routes.end() );
+   }
+
+   return result;
+}
 
 /* Vesting Delegations */
 
@@ -1149,6 +1176,40 @@ DEFINE_API_IMPL( database_api_impl, get_witnesses )
    return result;
 }
 
+DEFINE_API_IMPL( database_api_impl, get_witnesses_by_vote )
+{
+   account_name_type start_name = args[0].as< account_name_type >();
+   vector< fc::variant > start_key;
+
+   if( start_name == account_name_type() )
+   {
+      start_key.push_back( fc::variant( std::numeric_limits< int64_t >::max() ) );
+      start_key.push_back( fc::variant( account_name_type() ) );
+   }
+   else
+   {
+      auto start = list_witnesses( { args[0], 1, by_name } );
+
+      if( start.witnesses.size() == 0 )
+         return get_witnesses_by_vote_return();
+
+      start_key.push_back( fc::variant( start.witnesses[0].votes ) );
+      start_key.push_back( fc::variant( start.witnesses[0].owner ) );
+   }
+
+   auto limit = args[1].as< uint32_t >();
+   auto witnesses = list_witnesses( { fc::variant( start_key ), limit, by_vote_name } ).witnesses;
+
+   get_witnesses_by_vote_return result;
+
+   for( auto& w : witnesses )
+   {
+      result.push_back( api_witness_object( w ) );
+   }
+
+   return result;
+}
+
 DEFINE_API_IMPL( database_api_impl, get_witness_by_account )
 {
    auto witnesses = find_witnesses(
@@ -1334,6 +1395,7 @@ DEFINE_READ_APIS( database_api,
    (find_change_recovery_account_requests)
    (list_escrows)
    (find_escrows)
+   (get_withdraw_routes)
    (list_withdraw_vesting_routes)
    (find_withdraw_vesting_routes)
    (list_vesting_delegations)
@@ -1356,6 +1418,7 @@ DEFINE_READ_APIS( database_api,
    (get_owner_history)
    (get_recovery_request)
    (get_witnesses)
+   (get_witnesses_by_vote)
    (get_witness_by_account)
    (get_witness_count)
    (get_auction)

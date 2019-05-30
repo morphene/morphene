@@ -29,7 +29,7 @@
 
 #else // IS LIVE Morphene NETWORK
 
-#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 0) )
+#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 1) )
 
 #define MORPHENE_INIT_PUBLIC_KEY_STR              "MPH61x2vqwM97bQr8yRNM8HZoVqJxC3sE1XVZ4xmAJdKC4jzAqu5o"
 #define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live")) // f6f3128028d95bdc9cd47c3b27e3ebae4bee456bc3ce11d37492b828de2e2f59
