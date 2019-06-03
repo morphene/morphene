@@ -599,97 +599,6 @@ class wallet_api
          bool broadcast = false);
 
       /**
-       * Transfer funds from one account to another using escrow. MORPH can be transferred.
-       *
-       * @param from The account the funds are coming from
-       * @param to The account the funds are going to
-       * @param agent The account acting as the agent in case of dispute
-       * @param escrow_id A unique id for the escrow transfer. (from, escrow_id) must be a unique pair
-       * @param morph_amount The amount of MORPH to transfer
-       * @param fee The fee paid to the agent
-       * @param ratification_deadline The deadline for 'to' and 'agent' to approve the escrow transfer
-       * @param escrow_expiration The expiration of the escrow transfer, after which either party can claim the funds
-       * @param json_meta JSON encoded meta data
-       * @param broadcast true if you wish to broadcast the transaction
-       */
-      database_api::signed_transaction escrow_transfer(
-         string from,
-         string to,
-         string agent,
-         uint32_t escrow_id,
-         legacy_asset morph_amount,
-         legacy_asset fee,
-         time_point_sec ratification_deadline,
-         time_point_sec escrow_expiration,
-         string json_meta,
-         bool broadcast = false
-      );
-
-      /**
-       * Approve a proposed escrow transfer. Funds cannot be released until after approval. This is in lieu of requiring
-       * multi-sig on escrow_transfer
-       *
-       * @param from The account that funded the escrow
-       * @param to The destination of the escrow
-       * @param agent The account acting as the agent in case of dispute
-       * @param who The account approving the escrow transfer (either 'to' or 'agent)
-       * @param escrow_id A unique id for the escrow transfer
-       * @param approve true to approve the escrow transfer, otherwise cancels it and refunds 'from'
-       * @param broadcast true if you wish to broadcast the transaction
-       */
-      database_api::signed_transaction escrow_approve(
-         string from,
-         string to,
-         string agent,
-         string who,
-         uint32_t escrow_id,
-         bool approve,
-         bool broadcast = false
-      );
-
-      /**
-       * Raise a dispute on the escrow transfer before it expires
-       *
-       * @param from The account that funded the escrow
-       * @param to The destination of the escrow
-       * @param agent The account acting as the agent in case of dispute
-       * @param who The account raising the dispute (either 'from' or 'to')
-       * @param escrow_id A unique id for the escrow transfer
-       * @param broadcast true if you wish to broadcast the transaction
-       */
-      database_api::signed_transaction escrow_dispute(
-         string from,
-         string to,
-         string agent,
-         string who,
-         uint32_t escrow_id,
-         bool broadcast = false
-      );
-
-      /**
-       * Release funds help in escrow
-       *
-       * @param from The account that funded the escrow
-       * @param to The account the funds are originally going to
-       * @param agent The account acting as the agent in case of dispute
-       * @param who The account authorizing the release
-       * @param receiver The account that will receive funds being released
-       * @param escrow_id A unique id for the escrow transfer
-       * @param morph_amount The amount of MORPH that will be released
-       * @param broadcast true if you wish to broadcast the transaction
-       */
-      database_api::signed_transaction escrow_release(
-         string from,
-         string to,
-         string agent,
-         string who,
-         string receiver,
-         uint32_t escrow_id,
-         legacy_asset morph_amount,
-         bool broadcast = false
-      );
-
-      /**
        * Transfer MORPH into a vesting fund represented by vesting shares (VESTS). VESTS are required to vesting
        * for a minimum of one coin year and can be withdrawn once a week over a two year withdraw period.
        * VESTS are protected against dilution up until 90% of MORPH is vesting.
@@ -908,10 +817,6 @@ FC_API( morphene::wallet::wallet_api,
         (set_voting_proxy)
         (vote_for_witness)
         (transfer)
-        (escrow_transfer)
-        (escrow_approve)
-        (escrow_dispute)
-        (escrow_release)
         (transfer_to_vesting)
         (withdraw_vesting)
         (set_withdraw_vesting_route)

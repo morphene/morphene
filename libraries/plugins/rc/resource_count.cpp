@@ -79,12 +79,6 @@ struct count_operation_visitor
       execution_time_count += _e.delegate_vesting_shares_operation_exec_time;
    }
 
-   void operator()( const escrow_transfer_operation& op )const
-   {
-      state_bytes_count += _w.escrow_object_base_size;
-      execution_time_count += _e.escrow_transfer_operation_exec_time;
-   }
-
    void operator()( const request_account_recovery_operation& op )const
    {
       state_bytes_count += _w.account_recovery_request_object_base_size;
@@ -145,21 +139,6 @@ struct count_operation_visitor
       {
          new_account_op_count++;
       }
-   }
-
-   void operator()( const escrow_approve_operation& )const
-   {
-      execution_time_count += _e.escrow_approve_operation_exec_time;
-   }
-
-   void operator()( const escrow_dispute_operation& )const
-   {
-      execution_time_count += _e.escrow_dispute_operation_exec_time;
-   }
-
-   void operator()( const escrow_release_operation& )const
-   {
-      execution_time_count += _e.escrow_release_operation_exec_time;
    }
 
    void operator()( const witness_set_properties_operation& )const

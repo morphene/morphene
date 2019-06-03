@@ -120,8 +120,6 @@ class database_api
          (find_account_recovery_requests)
          (list_change_recovery_account_requests)
          (find_change_recovery_account_requests)
-         (list_escrows)
-         (find_escrows)
          (get_withdraw_routes)
          (list_withdraw_vesting_routes)
          (find_withdraw_vesting_routes)

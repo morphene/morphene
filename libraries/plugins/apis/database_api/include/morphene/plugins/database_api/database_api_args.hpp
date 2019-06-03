@@ -206,30 +206,6 @@ struct find_change_recovery_account_requests_args
 
 typedef list_change_recovery_account_requests_return find_change_recovery_account_requests_return;
 
-
-/* Escrow */
-
-struct list_escrows_args
-{
-   fc::variant       start;
-   uint32_t          limit;
-   sort_order_type   order;
-};
-
-struct list_escrows_return
-{
-   vector< api_escrow_object > escrows;
-};
-
-
-struct find_escrows_args
-{
-   account_name_type from;
-};
-
-typedef list_escrows_return find_escrows_return;
-
-
 /* Vesting Withdraw Routes */
 
 struct list_withdraw_vesting_routes_args
@@ -463,15 +439,6 @@ FC_REFLECT(
 
 FC_REFLECT( morphene::plugins::database_api::find_change_recovery_account_requests_args,
    (accounts) )
-
-FC_REFLECT( morphene::plugins::database_api::list_escrows_args,
-   (start)(limit)(order) )
-
-FC_REFLECT( morphene::plugins::database_api::list_escrows_return,
-   (escrows) )
-
-FC_REFLECT( morphene::plugins::database_api::find_escrows_args,
-   (from) )
 
 FC_REFLECT( morphene::plugins::database_api::list_withdraw_vesting_routes_args,
    (start)(limit)(order) )

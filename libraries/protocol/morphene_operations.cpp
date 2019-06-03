@@ -283,55 +283,6 @@ namespace morphene { namespace protocol {
       FC_ASSERT( pow_summary == tmp.pow_summary, "reported work does not match calculated work" );
    }
 
-   void escrow_transfer_operation::validate()const
-   {
-      validate_account_name( from );
-      validate_account_name( to );
-      validate_account_name( agent );
-      FC_ASSERT( fee.amount >= 0, "fee cannot be negative" );
-      FC_ASSERT( morph_amount.amount >= 0, "morph amount cannot be negative" );
-      FC_ASSERT( from != agent && to != agent, "agent must be a third party" );
-      FC_ASSERT( fee.symbol == MORPH_SYMBOL, "fee must be MORPH" );
-      FC_ASSERT( morph_amount.symbol == MORPH_SYMBOL, "morph amount must contain MORPH" );
-      FC_ASSERT( ratification_deadline < escrow_expiration, "ratification deadline must be before escrow expiration" );
-      if ( json_meta.size() > 0 )
-      {
-         FC_ASSERT( fc::is_utf8(json_meta), "JSON Metadata not formatted in UTF8" );
-         FC_ASSERT( fc::json::is_valid(json_meta), "JSON Metadata not valid JSON" );
-      }
-   }
-
-   void escrow_approve_operation::validate()const
-   {
-      validate_account_name( from );
-      validate_account_name( to );
-      validate_account_name( agent );
-      validate_account_name( who );
-      FC_ASSERT( who == to || who == agent, "to or agent must approve escrow" );
-   }
-
-   void escrow_dispute_operation::validate()const
-   {
-      validate_account_name( from );
-      validate_account_name( to );
-      validate_account_name( agent );
-      validate_account_name( who );
-      FC_ASSERT( who == from || who == to, "who must be from or to" );
-   }
-
-   void escrow_release_operation::validate()const
-   {
-      validate_account_name( from );
-      validate_account_name( to );
-      validate_account_name( agent );
-      validate_account_name( who );
-      validate_account_name( receiver );
-      FC_ASSERT( who == from || who == to || who == agent, "who must be from or to or agent" );
-      FC_ASSERT( receiver == from || receiver == to, "receiver must be from or to" );
-      FC_ASSERT( morph_amount.amount >= 0, "morph amount cannot be negative" );
-      FC_ASSERT( morph_amount.symbol == MORPH_SYMBOL, "morph amount must contain MORPH" );
-   }
-
    void request_account_recovery_operation::validate()const
    {
       validate_account_name( recovery_account );

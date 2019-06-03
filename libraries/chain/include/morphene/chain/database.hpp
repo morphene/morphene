@@ -175,9 +175,6 @@ namespace morphene { namespace chain {
          const account_object&  get_account(  const account_name_type& name )const;
          const account_object*  find_account( const account_name_type& name )const;
 
-         const escrow_object&   get_escrow(  const account_name_type& name, uint32_t escrow_id )const;
-         const escrow_object*   find_escrow( const account_name_type& name, uint32_t escrow_id )const;
-
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const witness_schedule_object&         get_witness_schedule_object()const;
@@ -339,7 +336,6 @@ namespace morphene { namespace chain {
          void process_auctions();
 
          void account_recovery_processing();
-         void expire_escrow_ratification();
 
          time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;

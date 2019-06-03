@@ -38,9 +38,6 @@ struct state_object_size_info
    // account_recovery_request_object
    int64_t account_recovery_request_object_base_size = 32*STATE_BYTES_SCALE;
 
-   // escrow_object
-   int64_t escrow_object_base_size            = 119    *STATE_BYTES_SCALE;
-
    // transaction_object
    int64_t transaction_object_base_size       =  35    *STATE_TRANSACTION_BYTE_SIZE;
    int64_t transaction_object_byte_size       =         STATE_TRANSACTION_BYTE_SIZE;
@@ -73,10 +70,6 @@ struct operation_exec_info
    int64_t claim_account_operation_exec_time                   =  10000;
    int64_t create_claimed_account_operation_exec_time          =  57700;
    int64_t delegate_vesting_shares_operation_exec_time         =  19900;
-   int64_t escrow_approve_operation_exec_time                  =   9900;
-   int64_t escrow_dispute_operation_exec_time                  =  11500;
-   int64_t escrow_release_operation_exec_time                  =  17200;
-   int64_t escrow_transfer_operation_exec_time                 =  19100;
    int64_t request_account_recovery_operation_exec_time        =  54400;
    int64_t set_withdraw_vesting_route_operation_exec_time      =  17900;
    int64_t transfer_operation_exec_time                        =   9600;
@@ -95,7 +88,6 @@ FC_REFLECT( morphene::plugins::rc::state_object_size_info,
    ( account_object_base_size )
    ( account_authority_object_base_size )
    ( account_recovery_request_object_base_size )
-   ( escrow_object_base_size )
    ( transaction_object_base_size )
    ( transaction_object_byte_size )
    ( vesting_delegation_object_base_size )
@@ -116,10 +108,6 @@ FC_REFLECT( morphene::plugins::rc::operation_exec_info,
    ( claim_account_operation_exec_time )
    ( create_claimed_account_operation_exec_time )
    ( delegate_vesting_shares_operation_exec_time )
-   ( escrow_approve_operation_exec_time )
-   ( escrow_dispute_operation_exec_time )
-   ( escrow_release_operation_exec_time )
-   ( escrow_transfer_operation_exec_time )
    ( request_account_recovery_operation_exec_time )
    ( set_withdraw_vesting_route_operation_exec_time )
    ( transfer_operation_exec_time )

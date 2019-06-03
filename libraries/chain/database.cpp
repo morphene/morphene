@@ -474,16 +474,6 @@ const account_object* database::find_account( const account_name_type& name )con
    return find< account_object, by_name >( name );
 }
 
-const escrow_object& database::get_escrow( const account_name_type& name, uint32_t escrow_id )const
-{ try {
-   return get< escrow_object, by_from_id >( boost::make_tuple( name, escrow_id ) );
-} FC_CAPTURE_AND_RETHROW( (name)(escrow_id) ) }
-
-const escrow_object* database::find_escrow( const account_name_type& name, uint32_t escrow_id )const
-{
-   return find< escrow_object, by_from_id >( boost::make_tuple( name, escrow_id ) );
-}
-
 const dynamic_global_property_object&database::get_dynamic_global_properties() const
 { try {
    return get< dynamic_global_property_object >();
@@ -1596,23 +1586,6 @@ void database::account_recovery_processing()
    }
 }
 
-void database::expire_escrow_ratification()
-{
-   const auto& escrow_idx = get_index< escrow_index >().indices().get< by_ratification_deadline >();
-   auto escrow_itr = escrow_idx.lower_bound( false );
-
-   while( escrow_itr != escrow_idx.end() && !escrow_itr->is_approved() && escrow_itr->ratification_deadline <= head_block_time() )
-   {
-      const auto& old_escrow = *escrow_itr;
-      ++escrow_itr;
-
-      adjust_balance( old_escrow.from, old_escrow.morph_balance );
-      adjust_balance( old_escrow.from, old_escrow.pending_fee );
-
-      remove( old_escrow );
-   }
-}
-
 time_point_sec database::head_block_time()const
 {
    return get_dynamic_global_properties().time;
@@ -1655,10 +1628,6 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< request_account_recovery_evaluator       >();
    _my->_evaluator_registry.register_evaluator< recover_account_evaluator                >();
    _my->_evaluator_registry.register_evaluator< change_recovery_account_evaluator        >();
-   _my->_evaluator_registry.register_evaluator< escrow_transfer_evaluator                >();
-   _my->_evaluator_registry.register_evaluator< escrow_approve_evaluator                 >();
-   _my->_evaluator_registry.register_evaluator< escrow_dispute_evaluator                 >();
-   _my->_evaluator_registry.register_evaluator< escrow_release_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< reset_account_evaluator                  >();
    _my->_evaluator_registry.register_evaluator< set_reset_account_evaluator              >();
    _my->_evaluator_registry.register_evaluator< account_create_with_delegation_evaluator >();
@@ -1687,7 +1656,6 @@ void database::initialize_indexes()
    add_core_index< owner_authority_history_index           >(*this);
    add_core_index< account_recovery_request_index          >(*this);
    add_core_index< change_recovery_account_request_index   >(*this);
-   add_core_index< escrow_index                            >(*this);
    add_core_index< vesting_delegation_index                >(*this);
    add_core_index< vesting_delegation_expiration_index     >(*this);
    add_core_index< auction_index                           >(*this);
@@ -2078,7 +2046,6 @@ void database::_apply_block( const signed_block& next_block )
    process_auctions();
 
    account_recovery_processing();
-   expire_escrow_ratification();
 
    process_hardforks();
 
@@ -2813,18 +2780,6 @@ void database::validate_invariants()const
                                  ( MORPHENE_MAX_PROXY_RECURSION_DEPTH > 0 ?
                                       itr->proxied_vsf_votes[MORPHENE_MAX_PROXY_RECURSION_DEPTH - 1] :
                                       itr->vesting_shares.amount ) );
-      }
-
-      const auto& escrow_idx = get_index< escrow_index >().indices().get< by_id >();
-
-      for( auto itr = escrow_idx.begin(); itr != escrow_idx.end(); ++itr )
-      {
-         total_supply += itr->morph_balance;
-
-         if( itr->pending_fee.symbol == MORPH_SYMBOL )
-            total_supply += itr->pending_fee;
-         else
-            FC_ASSERT( false, "found escrow pending fee that is not MORPH" );
       }
 
       total_supply += gpo.total_vesting_fund_morph;

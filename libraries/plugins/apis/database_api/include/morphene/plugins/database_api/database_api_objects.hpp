@@ -17,7 +17,6 @@ using namespace morphene::chain;
 typedef change_recovery_account_request_object api_change_recovery_account_request_object;
 typedef block_summary_object                   api_block_summary_object;
 typedef dynamic_global_property_object         api_dynamic_global_property_object;
-typedef escrow_object                          api_escrow_object;
 typedef withdraw_vesting_route_object          api_withdraw_vesting_route_object;
 typedef witness_vote_object                    api_witness_vote_object;
 typedef vesting_delegation_object              api_vesting_delegation_object;

@@ -53,8 +53,6 @@ class database_api_impl
          (find_account_recovery_requests)
          (list_change_recovery_account_requests)
          (find_change_recovery_account_requests)
-         (list_escrows)
-         (find_escrows)
          (get_withdraw_routes)
          (list_withdraw_vesting_routes)
          (find_withdraw_vesting_routes)
@@ -756,61 +754,6 @@ DEFINE_API_IMPL( database_api_impl, find_change_recovery_account_requests )
 }
 
 
-/* Escrows */
-
-DEFINE_API_IMPL( database_api_impl, list_escrows )
-{
-   FC_ASSERT( args.limit <= DATABASE_API_SINGLE_QUERY_LIMIT );
-
-   list_escrows_return result;
-   result.escrows.reserve( args.limit );
-
-   switch( args.order )
-   {
-      case( by_from_id ):
-      {
-         auto key = args.start.as< std::pair< account_name_type, uint32_t > >();
-         iterate_results< chain::escrow_index, chain::by_from_id >(
-            boost::make_tuple( key.first, key.second ),
-            result.escrows,
-            args.limit,
-            &database_api_impl::on_push_default< escrow_object > );
-         break;
-      }
-      case( by_ratification_deadline ):
-      {
-         auto key = args.start.as< std::vector< fc::variant > >();
-         FC_ASSERT( key.size() == 3, "by_ratification_deadline start requires 3 values. (bool, time_point_sec, escrow_id_type)" );
-         iterate_results< chain::escrow_index, chain::by_ratification_deadline >(
-            boost::make_tuple( key[0].as< bool >(), key[1].as< fc::time_point_sec >(), key[2].as< escrow_id_type >() ),
-            result.escrows,
-            args.limit,
-            &database_api_impl::on_push_default< escrow_object > );
-         break;
-      }
-      default:
-         FC_ASSERT( false, "Unknown or unsupported sort order" );
-   }
-
-   return result;
-}
-
-DEFINE_API_IMPL( database_api_impl, find_escrows )
-{
-   find_escrows_return result;
-
-   const auto& escrow_idx = _db.get_index< chain::escrow_index, chain::by_from_id >();
-   auto itr = escrow_idx.lower_bound( args.from );
-
-   while( itr != escrow_idx.end() && itr->from == args.from && result.escrows.size() <= DATABASE_API_SINGLE_QUERY_LIMIT )
-   {
-      result.escrows.push_back( *itr );
-      ++itr;
-   }
-
-   return result;
-}
-
 /* Withdraw Vesting Routes */
 
 DEFINE_API_IMPL( database_api_impl, list_withdraw_vesting_routes )
@@ -1509,8 +1452,6 @@ DEFINE_READ_APIS( database_api,
    (find_account_recovery_requests)
    (list_change_recovery_account_requests)
    (find_change_recovery_account_requests)
-   (list_escrows)
-   (find_escrows)
    (get_withdraw_routes)
    (list_withdraw_vesting_routes)
    (find_withdraw_vesting_routes)
