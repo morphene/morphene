@@ -612,11 +612,6 @@ struct pre_apply_operation_visitor
       regenerate( *account, *rc_account );
    }
 
-   void operator()( const account_create_with_delegation_operation& op )const
-   {
-      regenerate( op.creator );
-   }
-
    void operator()( const transfer_to_vesting_operation& op )const
    {
       account_name_type target = op.to.size() ? op.to : op.from;
@@ -726,12 +721,6 @@ struct post_apply_operation_visitor
    void operator()( const account_create_operation& op )const
    {
       create_rc_account( _db, _current_time, op.new_account_name, op.fee );
-   }
-
-   void operator()( const account_create_with_delegation_operation& op )const
-   {
-      create_rc_account( _db, _current_time, op.new_account_name, op.fee );
-      _mod_accounts.emplace_back( op.creator );
    }
 
    void operator()( const create_claimed_account_operation& op )const

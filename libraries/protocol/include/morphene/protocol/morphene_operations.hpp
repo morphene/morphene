@@ -25,25 +25,6 @@ namespace morphene { namespace protocol {
    };
 
 
-   struct account_create_with_delegation_operation : public base_operation
-   {
-      legacy_asset      fee;
-      legacy_asset      delegation;
-      account_name_type creator;
-      account_name_type new_account_name;
-      authority         owner;
-      authority         active;
-      authority         posting;
-      public_key_type   memo_key;
-      string            json_metadata;
-
-      extensions_type   extensions;
-
-      void validate()const;
-      void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
-   };
-
-
    struct account_update_operation : public base_operation
    {
       account_name_type             account;
@@ -571,18 +552,6 @@ FC_REFLECT( morphene::protocol::account_create_operation,
             (posting)
             (memo_key)
             (json_metadata) )
-
-FC_REFLECT( morphene::protocol::account_create_with_delegation_operation,
-            (fee)
-            (delegation)
-            (creator)
-            (new_account_name)
-            (owner)
-            (active)
-            (posting)
-            (memo_key)
-            (json_metadata)
-            (extensions) )
 
 FC_REFLECT( morphene::protocol::account_update_operation,
             (account)

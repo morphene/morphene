@@ -9,7 +9,6 @@ namespace morphene { namespace chain {
 using namespace morphene::protocol;
 
 MORPHENE_DEFINE_EVALUATOR( account_create )
-MORPHENE_DEFINE_EVALUATOR( account_create_with_delegation )
 MORPHENE_DEFINE_EVALUATOR( account_update )
 MORPHENE_DEFINE_EVALUATOR( transfer )
 MORPHENE_DEFINE_EVALUATOR( transfer_to_vesting )

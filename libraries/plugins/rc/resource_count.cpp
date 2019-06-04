@@ -41,18 +41,6 @@ struct count_operation_visitor
       execution_time_count += _e.account_create_operation_exec_time;
    }
 
-   void operator()( const account_create_with_delegation_operation& op )const
-   {
-      state_bytes_count +=
-           _w.account_object_base_size
-         + _w.account_authority_object_base_size
-         + get_authority_byte_count( op.owner )
-         + get_authority_byte_count( op.active )
-         + get_authority_byte_count( op.posting )
-         + _w.vesting_delegation_object_base_size;
-      execution_time_count += _e.account_create_with_delegation_operation_exec_time;
-   }
-
    void operator()( const account_witness_vote_operation& op )const
    {
       state_bytes_count += _w.witness_vote_object_base_size;

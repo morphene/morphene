@@ -62,7 +62,6 @@ struct state_object_size_info
 struct operation_exec_info
 {
    int64_t account_create_operation_exec_time                  =  57700;
-   int64_t account_create_with_delegation_operation_exec_time  =  57700;
    int64_t account_update_operation_exec_time                  =  14000;
    int64_t account_witness_proxy_operation_exec_time           = 117000;
    int64_t account_witness_vote_operation_exec_time            =  23000;
@@ -100,7 +99,6 @@ FC_REFLECT( morphene::plugins::rc::state_object_size_info,
 
 FC_REFLECT( morphene::plugins::rc::operation_exec_info,
    ( account_create_operation_exec_time )
-   ( account_create_with_delegation_operation_exec_time )
    ( account_update_operation_exec_time )
    ( account_witness_proxy_operation_exec_time )
    ( account_witness_vote_operation_exec_time )

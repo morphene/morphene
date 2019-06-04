@@ -35,7 +35,6 @@ struct api_account_object
       recovery_account( a.recovery_account ),
       reset_account( a.reset_account ),
       last_account_recovery( a.last_account_recovery ),
-      can_vote( a.can_vote ),
       voting_manabar( a.voting_manabar ),
       balance( a.balance ),
       vesting_shares( a.vesting_shares ),
@@ -82,7 +81,6 @@ struct api_account_object
    account_name_type reset_account;
    time_point_sec    last_account_recovery;
 
-   bool              can_vote = false;
    util::manabar     voting_manabar;
 
    legacy_asset      balance;
@@ -408,7 +406,7 @@ FC_REFLECT( morphene::plugins::database_api::api_account_object,
              (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)
              (created)
              (recovery_account)(last_account_recovery)(reset_account)
-             (can_vote)(voting_manabar)
+             (voting_manabar)
              (balance)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (proxied_vsf_votes)(witnesses_voted_for)

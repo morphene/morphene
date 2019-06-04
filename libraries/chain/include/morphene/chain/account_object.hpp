@@ -44,7 +44,6 @@ namespace morphene { namespace chain {
          account_name_type reset_account = MORPHENE_NULL_ACCOUNT;
          time_point_sec    last_account_recovery;
 
-         bool              can_vote = true;
          util::manabar     voting_manabar;
 
          legacy_asset      balance = legacy_asset( 0, MORPH_SYMBOL );  ///< total liquid shares held by this account
@@ -362,7 +361,7 @@ FC_REFLECT( morphene::chain::account_object,
              (created)
              (mined)
              (recovery_account)(last_account_recovery)(reset_account)
-             (can_vote)(voting_manabar)
+             (voting_manabar)
              (balance)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)
              (vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)

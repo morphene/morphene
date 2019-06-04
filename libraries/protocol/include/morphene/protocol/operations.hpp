@@ -34,7 +34,6 @@ namespace morphene { namespace protocol {
             reset_account_operation,
             set_reset_account_operation,
             delegate_vesting_shares_operation,
-            account_create_with_delegation_operation,
             witness_set_properties_operation,
 
             create_auction_operation,

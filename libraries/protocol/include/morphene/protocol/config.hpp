@@ -23,12 +23,15 @@
 
 #define MORPHENE_INIT_SUPPLY                      (int64_t( 1000000000 ) * int64_t( 1000 ))
 
+#define MORPHENE_VESTING_WITHDRAW_INTERVALS      	 7 /// 7 minutes total
+#define MORPHENE_VESTING_WITHDRAW_INTERVAL_SECONDS (60) /// 1 minute per interval
+
 /// Allows to limit number of total produced blocks.
 #define TESTNET_BLOCK_LIMIT                   		(3000000)
 
 #else // IS LIVE Morphene NETWORK
 
-#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 1) )
+#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 2) )
 
 #define MORPHENE_INIT_PUBLIC_KEY_STR              "MPH61x2vqwM97bQr8yRNM8HZoVqJxC3sE1XVZ4xmAJdKC4jzAqu5o"
 #define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live")) // f6f3128028d95bdc9cd47c3b27e3ebae4bee456bc3ce11d37492b828de2e2f59
@@ -40,6 +43,9 @@
 #define MORPHENE_OWNER_UPDATE_LIMIT               fc::minutes(60)
 
 #define MORPHENE_INIT_SUPPLY                      (int64_t( 1000000000 ) * int64_t( 1000 ))
+
+#define MORPHENE_VESTING_WITHDRAW_INTERVALS      	 7 /// 1 week total
+#define MORPHENE_VESTING_WITHDRAW_INTERVAL_SECONDS (60*60*24) /// 1 day per interval
 
 #endif
 
@@ -59,7 +65,7 @@
 #define MORPHENE_BLOCKS_PER_DAY                  (24*60*60/MORPHENE_BLOCK_INTERVAL)
 
 #define MORPHENE_INIT_WITNESS_NAME               "initwitness"
-#define MORPHENE_NUM_INIT_WITNESSES              1
+#define MORPHENE_NUM_INIT_WITNESSES              19
 #define MORPHENE_INIT_TIME                       (fc::time_point_sec());
 
 #define MORPHENE_MAX_VOTED_WITNESSES             19 /// elected
@@ -67,12 +73,11 @@
 #define MORPHENE_MAX_RUNNER_WITNESSES            1  /// timeshare
 #define MORPHENE_MAX_WITNESSES                   (MORPHENE_MAX_VOTED_WITNESSES+MORPHENE_MAX_MINER_WITNESSES+MORPHENE_MAX_RUNNER_WITNESSES) /// 21 is more than enough
 
-#define MORPHENE_HARDFORK_REQUIRED_WITNESSES     17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
+#define MORPHENE_HARDFORK_REQUIRED_WITNESSES     17 // 17 of the 21 dpos witnesses required for hardfork. This guarantees 75% participation on all subsequent rounds.
 #define MORPHENE_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
 #define MORPHENE_MAX_MEMO_SIZE                   2048
 #define MORPHENE_MAX_PROXY_RECURSION_DEPTH       4
-#define MORPHENE_VESTING_WITHDRAW_INTERVALS      7 /// 1 week total
-#define MORPHENE_VESTING_WITHDRAW_INTERVAL_SECONDS (60*60*24) /// 1 day per interval
+
 #define MORPHENE_MAX_WITHDRAW_ROUTES             10
 #define MORPHENE_VOTING_MANA_REGENERATION_SECONDS (5*60*60*24) // 5 day
 
@@ -81,32 +86,15 @@
 #define MORPHENE_100_PERCENT                     10000
 #define MORPHENE_1_PERCENT                       (MORPHENE_100_PERCENT/100)
 
-#define MORPHENE_INFLATION_RATE_START_PERCENT    (950) // 9.50%
+#define MORPHENE_INFLATION_RATE_START_PERCENT    (1500) // 15.00%
 #define MORPHENE_INFLATION_RATE_STOP_PERCENT     (95)  // 0.95%
-#define MORPHENE_INFLATION_NARROWING_PERIOD      (100000) // Narrow 0.01% every 100k blocks
-
-#define MORPHENE_MAX_RATION_DECAY_RATE           (1000000)
-
-#define MORPHENE_CREATE_ACCOUNT_WITH_MORPHENE_MODIFIER 30
-#define MORPHENE_CREATE_ACCOUNT_DELEGATION_RATIO    5
-#define MORPHENE_CREATE_ACCOUNT_DELEGATION_TIME     fc::days(30)
+#define MORPHENE_INFLATION_NARROWING_PERIOD      (MORPHENE_BLOCKS_PER_HOUR*24*3.5) // Narrow 0.01% every 7 days
 
 #define MORPHENE_MIN_PRODUCER_REWARD             legacy_asset( 1, MORPH_SYMBOL )
 
 #define MORPHENE_CONSIGNER_PAYOUT_PERCENT					(10 * MORPHENE_1_PERCENT)
 #define MORPHENE_BIDDER_PAYOUT_PERCENT						(90 * MORPHENE_1_PERCENT)
 
-// 5ccc e802 de5f
-// int(expm1( log1p( 1 ) / BLOCKS_PER_YEAR ) * 2**MORPHENE_APR_PERCENT_SHIFT_PER_BLOCK / 100000 + 0.5)
-// we use 100000 here instead of 10000 because we end up creating an additional 9x for vesting
-#define MORPHENE_APR_PERCENT_MULTIPLY_PER_BLOCK          ( (uint64_t( 0x5ccc ) << 0x20) \
-                                                         | (uint64_t( 0xe802 ) << 0x10) \
-                                                         | (uint64_t( 0xde5f )        ) \
-                                                         )
-// chosen to be the maximal value such that MORPHENE_APR_PERCENT_MULTIPLY_PER_BLOCK * 2**64 * 100000 < 2**128
-#define MORPHENE_APR_PERCENT_SHIFT_PER_BLOCK             87
-
-// These constants add up to GRAPHENE_100_PERCENT.  Each GRAPHENE_1_PERCENT is equivalent to 1% per year APY
 #define MORPHENE_PRODUCER_APR_PERCENT            10000
 
 #define MORPHENE_MIN_ACCOUNT_NAME_LENGTH         3
@@ -135,8 +123,6 @@
 #define MORPHENE_MIN_TRANSACTION_EXPIRATION_LIMIT (MORPHENE_BLOCK_INTERVAL * 5) // 5 transactions per block
 
 #define MORPHENE_MAX_AUTHORITY_MEMBERSHIP        10
-#define MORPHENE_MAX_ASSET_WHITELIST_AUTHORITIES 10
-#define MORPHENE_MAX_URL_LENGTH                  127
 
 #define MORPHENE_IRREVERSIBLE_THRESHOLD          (75 * MORPHENE_1_PERCENT)
 
@@ -183,6 +169,6 @@
 #define MORPHENE_NULL_ACCOUNT                    "null"
 /// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)
 #define MORPHENE_TEMP_ACCOUNT                    "temp"
-/// Represents the canonical account for specifying you will vote for directly (as opposed to a proxy)
+/// Represents the canonical account for specifying you will vote for witnesses directly (as opposed to a proxy)
 #define MORPHENE_PROXY_TO_SELF_ACCOUNT           ""
 ///@}

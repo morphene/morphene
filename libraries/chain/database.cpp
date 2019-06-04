@@ -1,7 +1,6 @@
 #include <morphene/protocol/morphene_operations.hpp>
 
 #include <morphene/chain/block_summary_object.hpp>
-#include <morphene/chain/compound.hpp>
 #include <morphene/chain/database.hpp>
 #include <morphene/chain/database_exceptions.hpp>
 #include <morphene/chain/db_with.hpp>
@@ -1630,7 +1629,6 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< change_recovery_account_evaluator        >();
    _my->_evaluator_registry.register_evaluator< reset_account_evaluator                  >();
    _my->_evaluator_registry.register_evaluator< set_reset_account_evaluator              >();
-   _my->_evaluator_registry.register_evaluator< account_create_with_delegation_evaluator >();
    _my->_evaluator_registry.register_evaluator< delegate_vesting_shares_evaluator        >();
    _my->_evaluator_registry.register_evaluator< witness_set_properties_evaluator         >();
    _my->_evaluator_registry.register_evaluator< create_auction_evaluator                 >();

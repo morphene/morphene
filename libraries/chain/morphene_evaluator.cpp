@@ -277,102 +277,6 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
    });
 }
 
-void account_create_with_delegation_evaluator::do_apply( const account_create_with_delegation_operation& o )
-{
-   if( _db.is_producing() )
-   {
-      FC_ASSERT( o.fee <= legacy_asset( MORPHENE_MAX_ACCOUNT_CREATION_FEE, MORPH_SYMBOL ), "Account creation fee cannot be too large" );
-   }
-
-   const auto& creator = _db.get_account( o.creator );
-   const auto& props = _db.get_dynamic_global_properties();
-   const witness_schedule_object& wso = _db.get_witness_schedule_object();
-
-   FC_ASSERT( creator.balance >= o.fee, "Insufficient balance to create account.",
-               ( "creator.balance", creator.balance )
-               ( "required", o.fee ) );
-
-   FC_ASSERT( creator.vesting_shares - creator.delegated_vesting_shares - legacy_asset( creator.to_withdraw - creator.withdrawn, VESTS_SYMBOL ) >= o.delegation, "Insufficient vesting shares to delegate to new account.",
-               ( "creator.vesting_shares", creator.vesting_shares )
-               ( "creator.delegated_vesting_shares", creator.delegated_vesting_shares )( "required", o.delegation ) );
-
-   auto target_delegation = legacy_asset( wso.median_props.account_creation_fee.amount * MORPHENE_CREATE_ACCOUNT_WITH_MORPHENE_MODIFIER * MORPHENE_CREATE_ACCOUNT_DELEGATION_RATIO, MORPH_SYMBOL ) * props.get_vesting_share_price();
-
-   auto current_delegation = legacy_asset( o.fee.amount * MORPHENE_CREATE_ACCOUNT_DELEGATION_RATIO, MORPH_SYMBOL ) * props.get_vesting_share_price() + o.delegation;
-
-   FC_ASSERT( current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
-               ("f", target_delegation )
-               ( "p", current_delegation )
-               ( "account_creation_fee", wso.median_props.account_creation_fee )
-               ( "o.fee", o.fee )
-               ( "o.delegation", o.delegation ) );
-
-   FC_ASSERT( o.fee >= wso.median_props.account_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
-               ("f", wso.median_props.account_creation_fee)
-               ("p", o.fee) );
-
-   if( _db.is_producing() )
-   {
-      validate_auth_size( o.owner );
-      validate_auth_size( o.active );
-      validate_auth_size( o.posting );
-   }
-
-   for( const auto& a : o.owner.account_auths )
-   {
-      _db.get_account( a.first );
-   }
-
-   for( const auto& a : o.active.account_auths )
-   {
-      _db.get_account( a.first );
-   }
-
-   for( const auto& a : o.posting.account_auths )
-   {
-      _db.get_account( a.first );
-   }
-
-   _db.modify( creator, [&]( account_object& c )
-   {
-      c.balance -= o.fee;
-      c.delegated_vesting_shares += o.delegation;
-   });
-
-   _db.adjust_balance( _db.get< account_object, by_name >( MORPHENE_NULL_ACCOUNT ), o.fee );
-
-   _db.create< account_object >( [&]( account_object& acc )
-   {
-      initialize_account_object( acc, o.new_account_name, o.memo_key, props, false, o.creator, _db.get_hardfork() );
-      acc.received_vesting_shares = o.delegation;
-
-      #ifndef IS_LOW_MEM
-         from_string( acc.json_metadata, o.json_metadata );
-      #endif
-   });
-
-   _db.create< account_authority_object >( [&]( account_authority_object& auth )
-   {
-      auth.account = o.new_account_name;
-      auth.owner = o.owner;
-      auth.active = o.active;
-      auth.posting = o.posting;
-      auth.last_owner_update = fc::time_point_sec::min();
-   });
-
-   if( o.delegation.amount > 0 )
-   {
-      _db.create< vesting_delegation_object >( [&]( vesting_delegation_object& vdo )
-      {
-         vdo.delegator = o.creator;
-         vdo.delegatee = o.new_account_name;
-         vdo.vesting_shares = o.delegation;
-         vdo.min_delegation_time = _db.head_block_time() + MORPHENE_CREATE_ACCOUNT_DELEGATION_TIME;
-      });
-   }
-}
-
-
 void account_update_evaluator::do_apply( const account_update_operation& o )
 {
    FC_ASSERT( o.account != MORPHENE_TEMP_ACCOUNT, "Cannot update temp account." );
@@ -559,8 +463,6 @@ void account_witness_proxy_evaluator::do_apply( const account_witness_proxy_oper
    const auto& account = _db.get_account( o.account );
    FC_ASSERT( account.proxy != o.proxy, "Proxy must change." );
 
-   FC_ASSERT( account.can_vote, "Account has declined the ability to vote and cannot proxy votes." );
-
    /// remove all current votes
    std::array<share_type, MORPHENE_MAX_PROXY_RECURSION_DEPTH+1> delta;
    delta[0] = -account.vesting_shares.amount;
@@ -605,9 +507,6 @@ void account_witness_vote_evaluator::do_apply( const account_witness_vote_operat
 {
    const auto& voter = _db.get_account( o.account );
    FC_ASSERT( voter.proxy.size() == 0, "A proxy is currently set, please clear the proxy before voting for a witness." );
-
-   if( o.approve )
-      FC_ASSERT( voter.can_vote, "Account has declined its voting rights." );
 
    const auto& witness = _db.get_witness( o.witness );
 
