@@ -185,7 +185,7 @@ void update_witness_schedule( database& db )
    const auto& schedule_idx = db.get_index<witness_index>().indices().get<by_schedule_time>();
    auto sitr = schedule_idx.begin();
    vector<decltype(sitr)> processed_witnesses;
-   for( auto witness_count = selected_voted.size();
+   for( auto witness_count = selected_voted.size() + selected_miners.size();
         sitr != schedule_idx.end() && witness_count < MORPHENE_MAX_WITNESSES;
         ++sitr )
    {
@@ -228,7 +228,9 @@ void update_witness_schedule( database& db )
       reset_virtual_schedule_time(db);
    }
 
-   size_t expected_active_witnesses = std::min( size_t(MORPHENE_MAX_WITNESSES), widx.size() );
+   auto total_expected_witnesses = num_elected + num_miners + num_timeshare;
+
+   size_t expected_active_witnesses = std::min( size_t(MORPHENE_MAX_WITNESSES), total_expected_witnesses );
    FC_ASSERT( active_witnesses.size() == expected_active_witnesses, "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
                                        ("active_witnesses.size()",active_witnesses.size()) ("MORPHENE_MAX_WITNESSES",MORPHENE_MAX_WITNESSES) ("expected_active_witnesses", expected_active_witnesses) );
 

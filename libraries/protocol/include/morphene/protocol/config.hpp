@@ -31,7 +31,7 @@
 
 #else // IS LIVE Morphene NETWORK
 
-#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 2) )
+#define MORPHENE_BLOCKCHAIN_VERSION               ( version(0, 1, 3) )
 
 #define MORPHENE_INIT_PUBLIC_KEY_STR              "MPH61x2vqwM97bQr8yRNM8HZoVqJxC3sE1XVZ4xmAJdKC4jzAqu5o"
 #define MORPHENE_CHAIN_ID 												(fc::sha256::hash("morphene-live")) // f6f3128028d95bdc9cd47c3b27e3ebae4bee456bc3ce11d37492b828de2e2f59
@@ -65,12 +65,12 @@
 #define MORPHENE_BLOCKS_PER_DAY                  (24*60*60/MORPHENE_BLOCK_INTERVAL)
 
 #define MORPHENE_INIT_WITNESS_NAME               "initwitness"
-#define MORPHENE_NUM_INIT_WITNESSES              19
+#define MORPHENE_NUM_INIT_WITNESSES              17
 #define MORPHENE_INIT_TIME                       (fc::time_point_sec());
 
-#define MORPHENE_MAX_VOTED_WITNESSES             19 /// elected
+#define MORPHENE_MAX_VOTED_WITNESSES             17 /// elected
 #define MORPHENE_MAX_MINER_WITNESSES             1  /// miner
-#define MORPHENE_MAX_RUNNER_WITNESSES            1  /// timeshare
+#define MORPHENE_MAX_RUNNER_WITNESSES            3  /// timeshare
 #define MORPHENE_MAX_WITNESSES                   (MORPHENE_MAX_VOTED_WITNESSES+MORPHENE_MAX_MINER_WITNESSES+MORPHENE_MAX_RUNNER_WITNESSES) /// 21 is more than enough
 
 #define MORPHENE_HARDFORK_REQUIRED_WITNESSES     17 // 17 of the 21 dpos witnesses required for hardfork. This guarantees 75% participation on all subsequent rounds.

@@ -213,6 +213,7 @@ struct api_witness_schedule_object
       median_props( wso.median_props ),
       majority_version( wso.majority_version ),
       max_voted_witnesses( wso.max_voted_witnesses ),
+      max_miner_witnesses( wso.max_miner_witnesses ),
       max_runner_witnesses( wso.max_runner_witnesses ),
       hardfork_required_witnesses( wso.hardfork_required_witnesses ),
       account_subsidy_rd( wso.account_subsidy_rd ),
@@ -240,6 +241,7 @@ struct api_witness_schedule_object
    version                    majority_version;
 
    uint8_t                    max_voted_witnesses;
+   uint8_t                    max_miner_witnesses;
    uint8_t                    max_runner_witnesses;
    uint8_t                    hardfork_required_witnesses;
 
@@ -454,6 +456,7 @@ FC_REFLECT( morphene::plugins::database_api::api_witness_schedule_object,
              (median_props)
              (majority_version)
              (max_voted_witnesses)
+             (max_miner_witnesses)
              (max_runner_witnesses)
              (hardfork_required_witnesses)
              (account_subsidy_rd)
